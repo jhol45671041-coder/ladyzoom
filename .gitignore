@@ -1,0 +1,8 @@
+# Dependencies (only needed for `npm run images`)
+node_modules/
+
+# Original, full-size photographs. `npm run images` turns them into the
+# web-sized files in assets/img, which are what gets committed.
+photos/
+
+.DS_Store
