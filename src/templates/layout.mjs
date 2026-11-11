@@ -38,6 +38,7 @@ ${shareImage ? html`<meta property="og:image" content="${shareImage}">
 <link rel="stylesheet" href="assets/css/styles.css?v=${assetVersion}">
 <script src="assets/js/store-data.js?v=${assetVersion}" defer></script>
 <script src="assets/js/site.js?v=${assetVersion}" defer></script>
+<script type="module" src="assets/js/account-icon.js"></script>
 </head>`;
 }
 
@@ -62,7 +63,7 @@ function header(page, { site, shopNav }) {
       </ul>
     </nav>
     <div class="site-header__actions">
-      <a class="site-header__link" href="account.html"${page.id === 'account' ? html` aria-current="page"` : ''}>Account</a>
+      <a class="site-header__link site-header__account" href="account.html" aria-label="Your profile"${page.id === 'account' ? html` aria-current="page"` : ''}><span class="site-header__account-icon">${icon('user', { size: 17 })}<img data-header-avatar alt="" hidden></span><span>Account</span></a>
       <a class="site-header__link" href="help.html"${page.id === 'help' ? html` aria-current="page"` : ''}>Customer care</a>
       <button class="bag-btn" type="button" data-open="bag" data-bag-button data-count="0" aria-label="Open bag">
         ${icon('bag', { size: 20 })}

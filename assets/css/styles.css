@@ -3157,3 +3157,151 @@ dialog::backdrop {
     flex-direction: column;
   }
 }
+
+.site-header__account {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.account__avatar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.account__avatar-button {
+  width: 5rem;
+  height: 5rem;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: #141311;
+  color: var(--stone);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.account__avatar-button:hover,
+.account__avatar-button:focus-visible {
+  border-color: var(--gold);
+  color: var(--ivory);
+}
+
+.account__avatar-button img,
+.account__avatar-placeholder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+}
+
+.account__avatar-button img[hidden] {
+  display: none;
+}
+
+.account__avatar-button [data-avatar-label] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.account__orders-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.account__orders-head p {
+  margin: 0;
+  color: var(--stone);
+  font-size: 0.75rem;
+}
+
+.account__orders-head strong {
+  color: var(--gold);
+  font-size: 1rem;
+}
+
+.account__order-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.account__order-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 0;
+  border-top: 1px solid var(--rule);
+  color: var(--stone);
+  font-size: 0.75rem;
+}
+
+.account__order-list strong {
+  color: var(--ivory);
+  font-weight: 500;
+}
+
+.account__avatar-placeholder[hidden] {
+  display: none;
+}
+
+@media (max-width: 1099px) {
+  .site-header__actions .site-header__account {
+    display: inline-flex;
+    padding: 0;
+  }
+
+  .site-header__account > span:not(.site-header__account-icon) {
+    display: none;
+  }
+
+  .site-header__actions {
+    gap: 0.625rem;
+  }
+}
+
+.site-header__account-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-grid;
+  place-items: center;
+  position: relative;
+  flex: 0 0 1.5rem;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.site-header__account-icon img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.site-header__account-icon img[hidden] {
+  display: none;
+}
+
+@media (max-width: 1099px) {
+  .site-header__inner {
+    gap: 0.5rem;
+  }
+}

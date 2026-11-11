@@ -58,22 +58,24 @@ The admin can edit a product's price, compare-at price, stock and visibility,
 and review orders and update their fulfilment status.
 
 Customer sign-in is available at `account.html`, by one-time email link. New
-customers can save their name, phone and delivery details in a profile visible
-only to their own account. Order history remains a placeholder until checkout
-is connected to the database.
+customers can save their name, phone, delivery details and a private profile
+photo. When signed-in customers submit checkout through WhatsApp, an order
+record is saved to their account; guest checkout continues to work but is not
+tracked in account history. Customers can see their order count and recent
+statuses.
 
 **Admin access is not active yet.** No administrator email has been added.
 Admin sign-in is also by one-time email link, and the database grants no admin
 access until the owner supplies an email address and it is added to
-`admin_emails`. Checkout is not connected to the orders table yet, so the
-dashboard cannot receive customer orders. Products in this database are the
+`admin_emails`. The dashboard can list signed-in customer order records, but
+there is no authorized admin email yet. Products in this database are the
 sample catalogue; the stock values start at zero. Changes made here do not yet
 update the generated storefront.
 
 Before using this for live sales, the owner must provide the admin email, set up
 the correct sign-in redirect URL for the chosen website host, and connect live
-product data and checkout to the database. Never put a Supabase secret or the
-database password in browser code or Git.
+product data to the storefront. Never put a Supabase secret or the database
+password in browser code or Git.
 
 ## Run it locally
 

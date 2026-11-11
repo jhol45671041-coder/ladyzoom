@@ -1,4 +1,5 @@
 import { html } from '../lib/html.mjs';
+import { icon } from '../templates/icons.mjs';
 
 export function accountPage({ site }) {
   const body = html`<section class="page-head page-head--compact container">
@@ -20,6 +21,15 @@ export function accountPage({ site }) {
 
   <div class="account__card" data-account-profile hidden>
     <div class="account__profile-head"><div><p class="eyebrow">Your details</p><h2 class="section-title">Delivery profile</h2><p class="account__copy">Signed in as <span data-account-email></span></p></div><button class="btn btn--ghost" type="button" data-account-signout>Sign out</button></div>
+    <div class="account__avatar">
+      <button class="account__avatar-button" type="button" data-avatar-button aria-label="Add a profile photo">
+        <img data-avatar-image alt="Your profile photo" hidden>
+        <span class="account__avatar-placeholder" data-avatar-placeholder>${icon('user', { size: 32 })}</span>
+        <span data-avatar-label>Add a profile photo</span>
+      </button>
+      <input data-avatar-file type="file" accept="image/jpeg,image/png,image/webp" hidden>
+      <p class="field__hint" data-avatar-status role="status" aria-live="polite">JPG, PNG or WebP, up to 3 MB. Only you can see it.</p>
+    </div>
     <form class="form account__form" data-profile-form>
       <div class="field"><label for="profile-name">Full name</label><input id="profile-name" name="full_name" type="text" autocomplete="name" maxlength="120"></div>
       <div class="field"><label for="profile-phone">Phone number</label><input id="profile-phone" name="phone" type="tel" autocomplete="tel" maxlength="40"></div>
@@ -28,7 +38,7 @@ export function accountPage({ site }) {
       <button class="btn btn--primary" type="submit">Save my details</button>
       <p class="field__hint" data-profile-status role="status" aria-live="polite"></p>
     </form>
-    <div class="account__orders"><h3>Order history</h3><p>Order history will appear here once online checkout is connected.</p></div>
+    <div class="account__orders"><div class="account__orders-head"><h3>Order history</h3><p><strong data-order-count>0</strong> <span data-order-label>orders</span></p></div><p data-orders-empty>Your orders placed while signed in will appear here. Requests are not confirmed until the store replies.</p><ol class="account__order-list" data-order-list></ol></div>
   </div>
 </section>`;
 

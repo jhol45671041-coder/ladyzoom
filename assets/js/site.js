@@ -459,6 +459,60 @@
     ].join('\n');
   }
 
+  /** Save an order to the customer's private history when they checked out signed in. */
+  async function recordCustomerOrder(details) {
+    let session;
+    try {
+      session = JSON.parse(localStorage.getItem('ladyzoom:customer-session') || 'null');
+    } catch {
+      return false;
+    }
+    if (!session?.access_token || !session.user?.id) return false;
+
+    const save = () => {
+      const { subtotal, delivery, total } = totals();
+      return fetch('https://ztlguqjriqwgcaghvypa.supabase.co/rest/v1/orders', {
+        method: 'POST',
+        headers: {
+          apikey: 'sb_publishable_6Gf1MPLjojjxN62F2zBzOw_0X30c-eJ',
+          authorization: `Bearer ${session.access_token}`,
+          'content-type': 'application/json',
+          Prefer: 'return=minimal',
+        },
+        body: JSON.stringify({
+          user_id: session.user.id,
+          customer_name: details.name,
+          phone: details.phone,
+          address: details.address,
+          city: details.city,
+          notes: details.notes,
+          items: lines.map(({ id, size, quantity }) => ({ id, size, quantity })),
+          subtotal,
+          delivery,
+          total,
+          status: 'new',
+        }),
+      });
+    };
+
+    let response = await save();
+    if (response.status === 401 && session.refresh_token) {
+      const refreshed = await fetch('https://ztlguqjriqwgcaghvypa.supabase.co/auth/v1/token?grant_type=refresh_token', {
+        method: 'POST',
+        headers: { apikey: 'sb_publishable_6Gf1MPLjojjxN62F2zBzOw_0X30c-eJ', 'content-type': 'application/json' },
+        body: JSON.stringify({ refresh_token: session.refresh_token }),
+      });
+      if (refreshed.ok) {
+        const previousSession = session;
+        session = { ...await refreshed.json(), user: previousSession.user, avatar_path: previousSession.avatar_path };
+        localStorage.setItem('ladyzoom:customer-session', JSON.stringify(session));
+        response = await save();
+      }
+    }
+    if (!response.ok) throw new Error('The order was sent to WhatsApp, but could not be added to your account history.');
+    return true;
+  }
+
   const checkoutForm = $('[data-checkout-form]');
   if (checkoutForm) {
     const fields = checkoutForm.elements;
@@ -492,6 +546,7 @@
       }
 
       const orderLink = `https://wa.me/${store.whatsapp}?text=${encodeURIComponent(orderMessage(details))}`;
+      const orderSaved = recordCustomerOrder(details).catch((error) => error);
       window.open(orderLink, '_blank', 'noopener');
 
       rememberOrder(orderLink);
@@ -502,6 +557,16 @@
       done.focus({ preventScroll: true });
       done.scrollIntoView({ block: 'center' });
       announce('Your order is ready in WhatsApp. Press send there to place it.');
+      orderSaved.then((result) => {
+        const tracking = $('[data-order-tracking-status]', checkout);
+        if (result instanceof Error) {
+          tracking.textContent = result.message;
+        } else if (result) {
+          tracking.textContent = 'This order request is saved. Send it in WhatsApp to place the order.';
+        } else {
+          tracking.textContent = 'Sign in before checkout to keep this order in your account history.';
+        }
+      });
     });
   }
 

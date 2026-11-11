@@ -78,6 +78,7 @@ export function checkoutPage({ site }) {
     <p class="eyebrow">One last step</p>
     <h2 class="section-title">Send your order in WhatsApp</h2>
     <p class="checkout__lede">Your order is written out and waiting in WhatsApp. Press send there to place it, and we will reply to confirm your delivery.</p>
+    <p class="field__hint" data-order-tracking-status role="status" aria-live="polite"></p>
     <div class="checkout__actions">
       <a class="btn btn--primary" data-checkout-reopen target="_blank" rel="noopener">Open WhatsApp again</a>
       <a class="btn btn--ghost" href="shop.html">Continue shopping</a>
