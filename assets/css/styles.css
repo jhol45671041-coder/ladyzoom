@@ -3305,3 +3305,50 @@ dialog::backdrop {
     gap: 0.5rem;
   }
 }
+
+/* 21. Brand essentials
+   ========================================================================== */
+
+.policy {
+  padding-bottom: var(--space-band);
+}
+
+.policy__section {
+  display: grid;
+  gap: 1rem;
+  padding-block: clamp(1.5rem, 3vw, 2.25rem);
+  border-top: 1px solid var(--rule);
+}
+
+.policy__section:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.policy__section h2 {
+  margin: 0.5rem 0 0;
+  font-family: var(--serif);
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 400;
+}
+
+.policy__section h3 {
+  margin: 0.5rem 0 0;
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+.policy__notice {
+  padding: 1rem 1.25rem;
+  border-left: 2px solid var(--gold);
+  background: rgba(212, 175, 55, 0.07);
+  color: var(--stone);
+  font-size: 0.875rem;
+}
+
+.policy__updated {
+  margin-top: 1.5rem;
+  color: var(--stone);
+  font-size: 0.75rem;
+}

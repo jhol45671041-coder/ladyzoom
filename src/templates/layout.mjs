@@ -112,16 +112,17 @@ const FOOTER_LINKS = [
   { id: 'shop', href: 'shop.html', label: 'Shop' },
   { id: 'about', href: 'about.html', label: 'Our Story' },
   { id: 'help', href: 'help.html', label: 'Customer care' },
-  { href: 'help.html#size-guide', label: 'Size guide' },
-  { href: 'help.html#contact', label: 'Contact' },
+  { id: 'account', href: 'account.html', label: 'Your account' },
+  { id: 'contact', href: 'contact.html', label: 'Contact' },
+  { id: 'size-guide', href: 'size-guide.html', label: 'Size guide' },
+  { id: 'faqs', href: 'faqs.html', label: 'FAQs' },
 ];
 
 const POLICY_LINKS = [
-  { href: 'help.html#delivery', label: 'Delivery' },
-  { href: 'help.html#payment', label: 'Payment' },
-  { href: 'help.html#exchanges', label: 'Exchanges' },
-  { href: 'help.html#care', label: 'Garment care' },
-  { href: 'account.html', label: 'Your account' },
+  { href: 'shipping.html', label: 'Shipping' },
+  { href: 'returns.html', label: 'Returns & exchanges' },
+  { href: 'privacy.html', label: 'Privacy' },
+  { href: 'terms.html', label: 'Terms' },
 ];
 
 function footer(page, { site, year }) {
@@ -154,6 +155,8 @@ function menuDialog(page, { site, shopNav }) {
     { id: 'about', href: 'about.html', label: 'Our Story' },
     { id: 'help', href: 'help.html', label: 'Customer care' },
     { id: 'account', href: 'account.html', label: 'Your account' },
+    { id: 'contact', href: 'contact.html', label: 'Contact us' },
+    { id: 'faqs', href: 'faqs.html', label: 'FAQs' },
   ];
   return html`<dialog class="drawer drawer--start" id="menu" aria-label="Menu">
   <div class="drawer__head">
