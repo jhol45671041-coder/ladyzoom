@@ -49,6 +49,26 @@ piece at a time, and the row can be swiped or scrolled sideways as usual.
 
 Run `npm run build` after changing it.
 
+## Store administration
+
+`admin.html` is the private administration workspace, backed by the separate
+Supabase project `ladyzoom-admin` in the Mumbai region. It uses a public browser
+key only; database row-level security protects changes and customer order data.
+The admin can edit a product's price, compare-at price, stock and visibility,
+and review orders and update their fulfilment status.
+
+**Admin access is not active yet.** No administrator email has been added. Sign-in
+is by one-time email link, and the database grants no admin access until the
+owner supplies an email address and it is added to `admin_emails`. Checkout is
+not connected to the orders table yet, so the dashboard cannot receive customer
+orders. Products in this database are the sample catalogue; the stock values
+start at zero. Changes made here do not yet update the generated storefront.
+
+Before using this for live sales, the owner must provide the admin email, set up
+the correct sign-in redirect URL for the chosen website host, and connect live
+product data and checkout to the database. Never put a Supabase secret or the
+database password in browser code or Git.
+
 ## Run it locally
 
 Node 18 or newer is needed to build. The build has no dependencies, so there is

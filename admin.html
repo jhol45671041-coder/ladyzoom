@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0b0b0b">
+  <title>Store administration · LadyZoom</title>
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/admin.css">
+  <script type="module" src="assets/js/admin.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span>LadyZoom</span><small>STORE ADMINISTRATION</small></a>
+    <a class="back-link" href="index.html">View storefront <span aria-hidden="true">↗</span></a>
+  </header>
+  <main class="admin-shell">
+    <section class="login-panel" data-login-panel>
+      <p class="eyebrow">Private workspace</p>
+      <h1>Good evening.</h1>
+      <p class="lede">Sign in with the email address approved for this store. We’ll send a one-time sign-in link.</p>
+      <form data-login-form>
+        <label for="admin-email">Email address</label>
+        <input id="admin-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+        <button class="button button--gold" type="submit">Send sign-in link <span aria-hidden="true">→</span></button>
+      </form>
+      <p class="status" data-login-status role="status" aria-live="polite"></p>
+      <p class="security-note">Access is limited by the store’s administrator list. Signing in alone does not grant access.</p>
+    </section>
+
+    <section class="dashboard" data-dashboard hidden>
+      <div class="dashboard-head">
+        <div><p class="eyebrow">LadyZoom · Pakistan</p><h1>Store overview</h1><p class="signed-in">Signed in as <span data-user-email></span></p></div>
+        <button class="button button--quiet" type="button" data-sign-out>Sign out</button>
+      </div>
+      <nav class="tabs" aria-label="Admin sections">
+        <button class="tab is-active" type="button" data-tab="products">Products <span data-product-count></span></button>
+        <button class="tab" type="button" data-tab="orders">Orders <span data-order-count></span></button>
+      </nav>
+      <div class="notice" data-admin-notice role="status" aria-live="polite" hidden></div>
+      <section class="admin-section" data-section="products">
+        <div class="section-head"><div><h2>Products</h2><p>Manage prices, stock and visibility.</p></div></div>
+        <div class="table-wrap"><table class="product-table"><thead><tr><th>Piece</th><th>Collection</th><th>Price · Rs.</th><th>Compare at</th><th>Stock</th><th>Live</th><th></th></tr></thead><tbody data-products></tbody></table></div>
+      </section>
+      <section class="admin-section" data-section="orders" hidden>
+        <div class="section-head"><div><h2>Orders</h2><p>Customer orders and fulfilment status.</p></div><button class="button button--quiet" type="button" data-refresh-orders>Refresh</button></div>
+        <div class="table-wrap"><table class="orders-table"><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Placed</th><th>Status</th><th></th></tr></thead><tbody data-orders></tbody></table></div>
+        <p class="empty-state" data-orders-empty hidden>No orders yet. Orders appear here once customer checkout is connected.</p>
+      </section>
+    </section>
+  </main>
+  <footer><span>LadyZoom Administration</span><span>Private · Secure · <a href="help.html">Customer care</a></span></footer>
+</body>
+</html>
