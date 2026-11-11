@@ -9,6 +9,7 @@ const SHAPES = {
   menu: '<path d="M3.5 8h17M3.5 16h17"/>',
   close: '<path d="m5.5 5.5 13 13m0-13-13 13"/>',
   arrow: '<path d="M4 12h16m-5.5-5.5L20 12l-5.5 5.5"/>',
+  'arrow-left': '<path d="M20 12H4m5.5-5.5L4 12l5.5 5.5"/>',
   chevron: '<path d="m6 9.5 6 6 6-6"/>',
   plus: '<path d="M12 5.5v13M5.5 12h13"/>',
   minus: '<path d="M5.5 12h13"/>',

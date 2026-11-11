@@ -12,25 +12,26 @@
  * id     becomes the page name (`pret` → pret.html), so keep it lower-case
  *        with hyphens.
  * image  the product photo used for the collection's tile on the home page.
+ *        The evening photographs (the second photo of each piece) suit it best.
  */
 export const categories = [
   {
     id: 'pret',
     name: 'Pret',
     intro: 'Ready-to-wear for every day: clean cuts in cotton and jacquard, finished with just enough detail.',
-    image: 'zoya-1',
+    image: 'zoya-2',
   },
   {
     id: 'luxury-pret',
     name: 'Luxury Pret',
     intro: 'Silks and velvets for dinners, dawats and every evening that asks for a little more.',
-    image: 'gulnar-1',
+    image: 'gulnar-2',
   },
   {
     id: 'formals',
     name: 'Formals',
     intro: 'Occasion wear, richly embroidered for weddings and festive nights.',
-    image: 'zarmina-1',
+    image: 'zarmina-2',
   },
 ];
 
@@ -51,10 +52,13 @@ const STANDARD_SIZES = ['XS', 'S', 'M', 'L', 'XL'];
  * sizes      the sizes offered. Use ['One Size'] for shawls and the like.
  * images     photo names without the size suffix or extension. `mehr-1` means
  *            assets/img/products/mehr-1-480.webp and mehr-1-960.webp, both made
- *            by `npm run images`. The first photo is the main one.
+ *            by `npm run images`. The first photo is the main one: the studio
+ *            shot on a plain backdrop, used wherever the piece is listed. A
+ *            second photo, if there is one, appears when a card is hovered and
+ *            alongside the first on the product page.
  * alt        describes the main photo for screen readers and search engines.
  * isNew      lists the piece under New In and marks it "New".
- * signature  includes the piece in the Signature Edit on the home page.
+ * bestseller lists the piece under Bestsellers on the home page.
  * summary    one or two sentences shown on the product page and in link previews.
  * details    bullet points for the Details panel.
  * care       care instructions.
@@ -69,9 +73,9 @@ export const products = [
     pieces: '3-piece: kurta, trousers and dupatta',
     colour: 'Burgundy',
     sizes: STANDARD_SIZES,
-    images: ['mehr-1'],
+    images: ['mehr-1', 'mehr-2'],
     alt: 'Model wearing the Mehr burgundy velvet kurta with gold embroidery and a sheer burgundy dupatta',
-    signature: true,
+    bestseller: true,
     summary:
       'Deep burgundy velvet traced with antique-gold tilla at the neckline, cuffs and hem, finished with a sheer organza dupatta. The look from this season’s campaign.',
     details: [
@@ -91,7 +95,7 @@ export const products = [
     pieces: '2-piece: peshwas and dupatta',
     colour: 'Ivory',
     sizes: STANDARD_SIZES,
-    images: ['noor-jahan-1'],
+    images: ['noor-jahan-1', 'noor-jahan-2'],
     alt: 'Model wearing the Noor Jahan floor-length ivory peshwas with gold embroidery and a matching dupatta',
     isNew: true,
     summary:
@@ -113,7 +117,7 @@ export const products = [
     pieces: '2-piece: kurta and trousers',
     colour: 'Emerald',
     sizes: STANDARD_SIZES,
-    images: ['sehar-1'],
+    images: ['sehar-1', 'sehar-2'],
     alt: 'Model wearing the Sehar emerald green jacquard kurta with matching trousers',
     isNew: true,
     summary:
@@ -134,9 +138,9 @@ export const products = [
     pieces: '3-piece: shirt, sharara and dupatta',
     colour: 'Burgundy',
     sizes: STANDARD_SIZES,
-    images: ['shehzadi-1'],
+    images: ['shehzadi-1', 'shehzadi-2'],
     alt: 'Model wearing the Shehzadi burgundy formal shirt and sharara with heavy gold embroidery and a scalloped dupatta',
-    signature: true,
+    bestseller: true,
     summary:
       'A burgundy formal densely worked in antique gold, paired with an embroidered sharara and a scalloped net dupatta.',
     details: [
@@ -157,8 +161,9 @@ export const products = [
     pieces: '2-piece: kurta and trousers',
     colour: 'Ivory',
     sizes: STANDARD_SIZES,
-    images: ['zoya-1'],
+    images: ['zoya-1', 'zoya-2'],
     alt: 'Model wearing the Zoya ivory cotton kurta with tone-on-tone embroidery and matching trousers',
+    bestseller: true,
     summary:
       'A straight ivory kurta in soft cotton with tone-on-tone chikankari embroidery and covered buttons. The easiest piece in the wardrobe.',
     details: [
@@ -177,8 +182,9 @@ export const products = [
     pieces: '3-piece: kurti, gharara and dupatta',
     colour: 'Black',
     sizes: STANDARD_SIZES,
-    images: ['zarmina-1'],
+    images: ['zarmina-1', 'zarmina-2'],
     alt: 'Model wearing the Zarmina black embroidered kurti and gharara with gold borders and a net dupatta',
+    bestseller: true,
     summary:
       'A black embroidered kurti over a full gharara edged in gold, with a net dupatta to match. Made for mehndis and late evenings.',
     details: [
@@ -198,7 +204,7 @@ export const products = [
     pieces: '2-piece: shirt and trousers',
     colour: 'Burgundy',
     sizes: STANDARD_SIZES,
-    images: ['mahnoor-1'],
+    images: ['mahnoor-1', 'mahnoor-2'],
     alt: 'Model wearing the Mahnoor burgundy silk shirt with matching wide-leg trousers',
     isNew: true,
     summary:
@@ -219,8 +225,9 @@ export const products = [
     pieces: '3-piece: kurta, trousers and dupatta',
     colour: 'Antique rose',
     sizes: STANDARD_SIZES,
-    images: ['gulnar-1'],
+    images: ['gulnar-1', 'gulnar-2'],
     alt: 'Model wearing the Gulnar antique rose silk kurta with gold detailing and a matching dupatta',
+    bestseller: true,
     summary:
       'Antique-rose raw silk with gold gota work at the neckline, cuffs and hem, and a soft organza dupatta.',
     details: [
@@ -240,9 +247,9 @@ export const products = [
     pieces: '2-piece: kurta and trousers',
     colour: 'Black',
     sizes: STANDARD_SIZES,
-    images: ['anaya-1'],
+    images: ['anaya-1', 'anaya-2'],
     alt: 'Model wearing the Anaya black A-line kurta with a gold printed border and black trousers',
-    signature: true,
+    bestseller: true,
     summary:
       'An A-line black kurta with a gold block-printed border at the hem and cuffs, and a printed neckline to match.',
     details: [

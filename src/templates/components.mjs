@@ -32,10 +32,10 @@ export const productImageLarge = (name) => productImagePath(name, largestWidth(i
  * smallest file that still looks sharp. Pass `eager` for a photo that is
  * visible as soon as the page opens.
  */
-export function productImage(name, { alt, sizes, eager = false }) {
+export function productImage(name, { alt, sizes, eager = false, className = '' }) {
   const preset = imageSizes.product;
   const largest = largestWidth(preset);
-  return html`<img src="${productImagePath(name, largest)}" srcset="${imageSrcset(`products/${name}`, preset)}" sizes="${sizes}" width="${largest}" height="${heightFor(preset, largest)}" alt="${alt}"${eager ? html` fetchpriority="high"` : html` loading="lazy"`} decoding="async">`;
+  return html`<img${className ? html` class="${className}"` : ''} src="${productImagePath(name, largest)}" srcset="${imageSrcset(`products/${name}`, preset)}" sizes="${sizes}" width="${largest}" height="${heightFor(preset, largest)}" alt="${alt}"${eager ? html` fetchpriority="high"` : html` loading="lazy"`} decoding="async">`;
 }
 
 /* ---------- Products ----------------------------------------------------- */
@@ -65,27 +65,35 @@ export function badge(product) {
 const CARD_SIZES = {
   // Two columns on phones, three from 560px.
   standard: '(min-width: 1320px) 410px, (min-width: 560px) 31vw, 46vw',
-  // The first card of a "feature" grid runs the full width on phones.
-  lead: '(min-width: 1320px) 410px, (min-width: 560px) 31vw, 92vw',
   // Two columns up to 800px, then four.
   four: '(min-width: 1320px) 306px, (min-width: 800px) 23vw, 46vw',
+  // The row that scrolls sideways: two and a bit cards on phones, five on desktops.
+  rail: '(min-width: 1320px) 254px, (min-width: 1100px) 19vw, (min-width: 800px) 24vw, (min-width: 560px) 32vw, 42vw',
 };
 
 /**
- * A product as it appears in a grid.
+ * A product as it appears in a grid or a rail.
  * data-price and data-index let the sort control on listing pages reorder cards.
+ *
+ * reveal  whether the card fades in as it scrolls into view. Off inside a
+ *         rail, where the cards beyond the edge would otherwise wait unseen.
  */
-export function productCard(product, index, sizes = CARD_SIZES.standard) {
-  return html`<li class="card" data-reveal data-price="${product.price}" data-index="${index}">
+export function productCard(product, index, { sizes = CARD_SIZES.standard, reveal = true } = {}) {
+  const [main, alternate] = product.images;
+  return html`<li class="card"${reveal ? html` data-reveal` : ''} data-price="${product.price}" data-index="${index}">
     <a class="card__link" href="${productUrl(product)}">
       <div class="card__media">
-        ${productImage(product.images[0], { alt: product.alt, sizes })}
+        ${productImage(main, { alt: product.alt, sizes })}
+        ${alternate ? productImage(alternate, { alt: '', sizes, className: 'card__alt' }) : ''}
         ${badge(product)}
       </div>
       <div class="card__body">
-        <h3 class="card__name">${product.name}</h3>
-        <p class="card__title">${product.title}</p>
-        ${price(product)}
+        <div>
+          <h3 class="card__name">${product.name}</h3>
+          <p class="card__title">${product.title}</p>
+          ${price(product)}
+        </div>
+        ${icon('bag', { size: 18, className: 'card__icon' })}
       </div>
     </a>
   </li>`;
@@ -95,18 +103,23 @@ export function productCard(product, index, sizes = CARD_SIZES.standard) {
  * A grid of product cards.
  *
  * layout  'standard'  two columns on phones, three on larger screens.
- *         'feature'   for a row of three: on phones the first card runs the
- *                     full width with the other two beneath it.
  *         'four'      for a row of four: two by two on phones.
  */
 export function productGrid(products, { sortable = false, layout = 'standard' } = {}) {
-  const sizesFor = (index) => {
-    if (layout === 'four') return CARD_SIZES.four;
-    if (layout === 'feature' && index === 0) return CARD_SIZES.lead;
-    return CARD_SIZES.standard;
-  };
+  const sizes = layout === 'four' ? CARD_SIZES.four : CARD_SIZES.standard;
   return html`<ul class="grid${layout === 'standard' ? '' : ` grid--${layout}`}"${sortable ? html` data-sort-grid` : ''}>
-    ${products.map((product, index) => productCard(product, index, sizesFor(index)))}
+    ${products.map((product, index) => productCard(product, index, { sizes }))}
+  </ul>`;
+}
+
+/**
+ * A single row of product cards that scrolls sideways. The buttons that step
+ * through it are marked data-rail-prev and data-rail-next with the rail's id
+ * (see the Bestsellers section of the home page).
+ */
+export function productRail(products, { id, label }) {
+  return html`<ul class="rail" id="${id}" data-rail aria-label="${label}">
+    ${products.map((product, index) => productCard(product, index, { sizes: CARD_SIZES.rail, reveal: false }))}
   </ul>`;
 }
 

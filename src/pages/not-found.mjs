@@ -25,7 +25,7 @@ export function notFoundPage({ site }) {
   <p class="eyebrow">Page not found</p>
   <h1 class="story__quote">This page has slipped away</h1>
   <p class="story__text">The link may be out of date, or the piece may no longer be in the collection.</p>
-  <a class="btn btn--gold" href="shop.html">Shop all pieces</a>
+  <a class="btn btn--primary" href="shop.html">Shop all pieces</a>
 </section>`;
 
   return {

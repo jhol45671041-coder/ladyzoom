@@ -184,11 +184,10 @@
     const { count, subtotal, delivery, total } = totals();
     const itemCount = `${count} ${count === 1 ? 'item' : 'items'}`;
 
-    for (const badge of $$('[data-bag-count]')) {
-      badge.textContent = count;
-      badge.hidden = count === 0;
-    }
+    for (const badge of $$('[data-bag-count]')) badge.textContent = count;
     for (const button of $$('[data-bag-button]')) {
+      // styles.css reads data-count to hide the small badge while the bag is empty.
+      button.dataset.count = count;
       button.setAttribute('aria-label', count === 0 ? 'Open bag' : `Open bag, ${itemCount}`);
     }
 
@@ -502,6 +501,71 @@
       done.focus({ preventScroll: true });
       done.scrollIntoView({ block: 'center' });
       announce('Your order is ready in WhatsApp. Press send there to place it.');
+    });
+  }
+
+  /* ---------- Rails ---------------------------------------------------------
+     A rail is a row of cards that scrolls sideways. It works by touch, wheel
+     and keyboard on its own; the arrow buttons are an extra for pointers, and
+     only appear when there is more than fits on screen. */
+
+  for (const rail of $$('[data-rail]')) {
+    const controls = $(`[data-rail-controls="${rail.id}"]`);
+    if (!controls) continue;
+    const previous = $('[data-rail-prev]', controls);
+    const next = $('[data-rail-next]', controls);
+
+    /** One card plus the gap after it. */
+    const step = () => {
+      const [first, second] = rail.children;
+      if (!first) return rail.clientWidth;
+      return second ? second.offsetLeft - first.offsetLeft : first.offsetWidth;
+    };
+
+    const sync = () => {
+      const furthest = rail.scrollWidth - rail.clientWidth;
+      controls.hidden = furthest <= 1;
+      previous.disabled = rail.scrollLeft <= 1;
+      next.disabled = rail.scrollLeft >= furthest - 1;
+    };
+
+    const move = (direction) => {
+      rail.scrollBy({ left: direction * step(), behavior: reducedMotion.matches ? 'auto' : 'smooth' });
+    };
+
+    previous.addEventListener('click', () => move(-1));
+    next.addEventListener('click', () => move(1));
+    rail.addEventListener('scroll', sync, { passive: true });
+    window.addEventListener('resize', sync);
+    sync();
+  }
+
+  /* ---------- Updates list --------------------------------------------------
+     Joining the list is a WhatsApp message to the store, like an order. The
+     form works without this script; here the customer's name is added to it. */
+
+  const joinForm = $('[data-join]');
+  if (joinForm) {
+    const nameField = $('[data-join-name]', joinForm);
+    const status = $('[data-join-status]');
+
+    joinForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const name = nameField.value.trim().replace(/\s+/g, ' ');
+      if (name === '') {
+        nameField.value = '';
+        nameField.reportValidity();
+        return;
+      }
+
+      const message = `Hello ${store.name}, please add me to your updates list. My name is ${name}.`;
+      window.open(`https://wa.me/${store.whatsapp}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
+
+      status.textContent = store.whatsapp
+        ? 'WhatsApp has opened with your request. Press send there to join.'
+        : 'Preview mode: no store WhatsApp number has been added yet, so WhatsApp will ask which chat to send your request to.';
+      status.hidden = false;
+      announce(status.textContent);
     });
   }
 

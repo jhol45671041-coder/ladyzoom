@@ -9,6 +9,10 @@ export const imageSizes = {
   heroWide: { ratio: 16 / 9, widths: [960, 1920] },
   /** Home-page hero on phones and upright tablets, where the photo sits above the headline. */
   heroTall: { ratio: 4 / 5, widths: [600, 1080] },
+  /** The photograph beside "Our philosophy" on the home page. */
+  story: { ratio: 3 / 2, widths: [720, 1440] },
+  /** The strip of fabric behind the updates list, above the footer. */
+  satin: { ratio: 24 / 7, widths: [960, 1920] },
   /** Product photographs. */
   product: { ratio: 4 / 5, widths: [480, 960] },
 };

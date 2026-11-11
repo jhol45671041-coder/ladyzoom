@@ -73,12 +73,15 @@ function checkSite(problems) {
   if (!isWholeNumber(site.delivery.freeOver)) problems.push('site.delivery.freeOver must be a whole number of rupees.');
   if (!isWholeNumber(site.exchange.days)) problems.push('site.exchange.days must be a whole number of days.');
 
-  for (const [name, preset] of [
-    ['hero-wide', imageSizes.heroWide],
-    ['hero-tall', imageSizes.heroTall],
+  // The home page's own photographs: prepared name, shape, and the original it is made from.
+  for (const [name, preset, original] of [
+    ['hero-wide', imageSizes.heroWide, 'hero'],
+    ['hero-tall', imageSizes.heroTall, 'hero-mobile'],
+    ['story', imageSizes.story, 'story'],
+    ['satin', imageSizes.satin, 'satin'],
   ]) {
     for (const file of missingImageFiles('', name, preset)) {
-      problems.push(`The home page photo ${file} is missing. Add photos/hero.jpg and photos/hero-mobile.jpg, then run "npm run images".`);
+      problems.push(`The home page photo ${file} is missing. Add photos/${original}.jpg and run "npm run images".`);
     }
   }
 }
