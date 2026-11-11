@@ -1109,9 +1109,10 @@ a.wordmark:hover {
   display: none;
 }
 
-/* While site.js is moving the row it places every frame itself, so the row
-   must not also pull towards the nearest card. */
-.rail.is-gliding {
+/* While the row follows page scrolling or an arrow glide, it must not also
+   pull towards the nearest card. */
+.rail.is-gliding,
+.rail[data-rail-scroll] {
   scroll-snap-type: none;
 }
 

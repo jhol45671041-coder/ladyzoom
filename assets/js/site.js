@@ -527,7 +527,6 @@
     if (!controls) continue;
     const previous = $('[data-rail-prev]', controls);
     const next = $('[data-rail-next]', controls);
-    const toggle = $('[data-rail-toggle]', controls);
     const cards = Array.from(rail.children);
 
     let head = 0; // which card is laid out first
@@ -661,14 +660,44 @@
     window.addEventListener('resize', sync);
     sync();
 
-    /* Moving by itself. The row advances a card at a time while at least half
-       of it is on screen, and stands still:
-         - for visitors who have asked their device to reduce motion;
-         - while the pointer is being used over it, a finger is on it, or the
-           keyboard is in it, so that nothing moves from under a tap or a click;
-         - once the pause button is pressed, until it is pressed again;
-         - while the page is in a background tab. */
-    if (!toggle || !rail.hasAttribute('data-rail-auto') || !('IntersectionObserver' in window)) continue;
+    /* The Bestsellers row follows the visitor's vertical page scroll. Scrolling
+       down advances the row; scrolling up reverses it. */
+    if (!rail.hasAttribute('data-rail-scroll')) continue;
+    let lastPageY = window.scrollY;
+    let scrollRemainder = 0;
+    let wasInView = (() => {
+      const bounds = rail.getBoundingClientRect();
+      return bounds.bottom > 0 && bounds.top < window.innerHeight;
+    })();
+    window.addEventListener('scroll', () => {
+      const pageY = window.scrollY;
+      const delta = pageY - lastPageY;
+      lastPageY = pageY;
+      const bounds = rail.getBoundingClientRect();
+      const inView = bounds.bottom > 0 && bounds.top < window.innerHeight;
+      const canMove = wasInView && inView;
+      wasInView = inView;
+      if (!delta || !canMove || document.hidden) return;
+      const by = step();
+      if (!(by > 0) || cards.length < 2) return;
+      scrollRemainder += delta * 0.8;
+      rail.classList.add('is-gliding');
+      let target = rail.scrollLeft + scrollRemainder;
+      scrollRemainder = 0;
+      let guard = cards.length + 2;
+      while ((target > overflow() || target < 0) && guard-- > 0) {
+        if (target > overflow()) {
+          turn(1, by);
+          target -= by;
+        } else {
+          turn(-1, by);
+          target += by;
+        }
+      }
+      place(Math.max(0, Math.min(overflow(), target)));
+      rail.classList.remove('is-gliding');
+    }, { passive: true });
+    continue;
 
     let onScreen = false;
     let pointing = false; // the pointer has moved over the row and not yet left
