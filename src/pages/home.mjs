@@ -12,6 +12,12 @@ import { icon } from '../templates/icons.mjs';
 
 /* The wording on this page is SAMPLE COPY. Rewrite it in the label's own words. */
 
+/**
+ * Whether the Bestsellers row moves along by itself while it is on screen.
+ * Set to false for a row that only moves when swiped or stepped through.
+ */
+const BESTSELLERS_MOVE = true;
+
 /** The three pieces pictured in the campaign section, by product id. */
 const CAMPAIGN_PIECES = ['mehr', 'shehzadi', 'mahnoor'];
 
@@ -103,12 +109,13 @@ function bestsellers(pieces) {
         <p class="best__text">The pieces chosen again and again, season after season.</p>
         <a class="text-link" href="shop.html">View all ${icon('arrow', { size: 16 })}</a>
         <div class="rail-controls" data-rail-controls="bestsellers" hidden>
+          <button class="rail-toggle" type="button" data-rail-toggle aria-controls="bestsellers" aria-label="Pause automatic scrolling" hidden>${icon('pause', { size: 20, className: 'rail-toggle__pause' })}${icon('play', { size: 20, className: 'rail-toggle__play' })}</button>
           <button class="rail-btn" type="button" data-rail-prev aria-controls="bestsellers" aria-label="Previous pieces">${icon('arrow-left', { size: 18 })}</button>
           <button class="rail-btn" type="button" data-rail-next aria-controls="bestsellers" aria-label="More pieces">${icon('arrow', { size: 18 })}</button>
         </div>
       </div>
     </div>
-    ${productRail(pieces, { id: 'bestsellers', label: 'Bestsellers' })}
+    ${productRail(pieces, { id: 'bestsellers', label: 'Bestsellers', auto: BESTSELLERS_MOVE })}
   </div>
 </section>`;
 }

@@ -116,9 +116,12 @@ export function productGrid(products, { sortable = false, layout = 'standard' } 
  * A single row of product cards that scrolls sideways. The buttons that step
  * through it are marked data-rail-prev and data-rail-next with the rail's id
  * (see the Bestsellers section of the home page).
+ *
+ * auto  the row also moves along by itself while it is on screen. It then
+ *       needs a pause button beside the others, marked data-rail-toggle.
  */
-export function productRail(products, { id, label }) {
-  return html`<ul class="rail" id="${id}" data-rail aria-label="${label}">
+export function productRail(products, { id, label, auto = false }) {
+  return html`<ul class="rail" id="${id}" data-rail${auto ? html` data-rail-auto` : ''} aria-label="${label}">
     ${products.map((product, index) => productCard(product, index, { sizes: CARD_SIZES.rail, reveal: false }))}
   </ul>`;
 }

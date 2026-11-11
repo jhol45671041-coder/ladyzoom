@@ -13,6 +13,8 @@ const SHAPES = {
   chevron: '<path d="m6 9.5 6 6 6-6"/>',
   plus: '<path d="M12 5.5v13M5.5 12h13"/>',
   minus: '<path d="M5.5 12h13"/>',
+  pause: '<path d="M8.5 5v14m7-14v14"/>',
+  play: '<path d="M7.5 4.5v15L19.5 12z"/>',
   truck:
     '<path d="M2.5 6.5h11V16h-11z"/><path d="M13.5 9.5h4l3 3.5v3h-7"/><circle cx="7" cy="17.5" r="1.75"/><circle cx="17" cy="17.5" r="1.75"/>',
   cash: '<rect x="2.5" y="6.5" width="19" height="11" rx="1"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v4m12-4v4"/>',

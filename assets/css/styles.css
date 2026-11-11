@@ -1036,32 +1036,52 @@ a.wordmark:hover {
 
 .rail-controls {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
 }
 
-.rail-btn {
+.rail-btn,
+.rail-toggle {
   display: inline-grid;
   place-items: center;
   width: 2.5rem;
   height: 2.5rem;
-  border: 1px solid rgba(243, 236, 224, 0.6);
   border-radius: 50%;
+}
+
+.rail-btn {
+  border: 1px solid rgba(243, 236, 224, 0.6);
   transition:
     background-color 0.25s,
     border-color 0.25s,
-    color 0.25s,
-    opacity 0.25s;
+    color 0.25s;
 }
 
-.rail-btn:hover:not(:disabled) {
+.rail-btn:hover {
   border-color: var(--ivory);
   background: var(--ivory);
   color: var(--black);
 }
 
-.rail-btn:disabled {
-  opacity: 0.35;
-  cursor: default;
+/* Pauses a row that moves by itself, and sets it going again. Quieter than
+   the arrows beside it; it shows the pause mark while the row is moving and
+   the play mark once it has been stopped. */
+.rail-toggle {
+  color: var(--stone);
+  transition: color 0.25s;
+}
+
+.rail-toggle:hover {
+  color: var(--ivory);
+}
+
+.rail-toggle__play,
+.rail-toggle.is-paused .rail-toggle__pause {
+  display: none;
+}
+
+.rail-toggle.is-paused .rail-toggle__play {
+  display: block;
 }
 
 /* A single row that scrolls sideways and stops on a card. --rail-columns is
@@ -1078,6 +1098,7 @@ a.wordmark:hover {
   margin-inline: calc(var(--gutter) * -1);
   padding-inline: var(--gutter);
   overflow-x: auto;
+  overflow-anchor: none;
   overscroll-behavior-x: contain;
   scroll-padding-inline: var(--gutter);
   scroll-snap-type: x mandatory;
@@ -1086,6 +1107,12 @@ a.wordmark:hover {
 
 .rail::-webkit-scrollbar {
   display: none;
+}
+
+/* While site.js is moving the row it places every frame itself, so the row
+   must not also pull towards the nearest card. */
+.rail.is-gliding {
+  scroll-snap-type: none;
 }
 
 .rail > * {
@@ -1121,6 +1148,8 @@ a.wordmark:hover {
   }
 }
 
+/* Stacked: the heading, then the line of text, then the link to everything on
+   the left with the row's buttons on the right. */
 @media (max-width: 799px) {
   .best__head {
     flex-direction: column;
@@ -1128,17 +1157,22 @@ a.wordmark:hover {
   }
 
   .best__aside {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr auto;
     width: 100%;
   }
 
   .best__text {
-    flex: 1 1 100%;
+    grid-column: 1 / -1;
     max-width: 24rem;
   }
 
+  .best__aside .text-link {
+    justify-self: start;
+  }
+
   .rail-controls {
-    margin-left: auto;
+    grid-column: 2;
   }
 }
 
@@ -1171,7 +1205,10 @@ a.wordmark:hover {
   }
 }
 
+/* Positioned, so that text hidden for screen readers only (the "Now" and
+   "Was" of a sale price) stays with its card inside a row that scrolls. */
 .card__link {
+  position: relative;
   display: block;
 }
 

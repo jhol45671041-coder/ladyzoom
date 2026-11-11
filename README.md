@@ -32,10 +32,30 @@ From top to bottom, with where each part comes from:
 | --- | --- | --- |
 | Hero | The campaign photograph under the header, the season line, a headline and the list of collections | Wording in `src/pages/home.mjs`; season in `src/data/site.mjs`; photo `photos/hero.jpg` |
 | The Festive Edit | One tile per collection, plus New In | Each collection's `image` in `src/data/catalog.mjs` |
-| Bestsellers | A row of pieces to scroll through | `bestseller: true` on a product in `src/data/catalog.mjs` |
+| Bestsellers | A row of pieces that moves along by itself once it is on screen | `bestseller: true` on a product in `src/data/catalog.mjs`; the movement with `BESTSELLERS_MOVE` in `src/pages/home.mjs` |
 | Our philosophy | A black-and-white photograph beside a few words | Wording in `src/pages/home.mjs`; photo `photos/story.jpg` |
 | The campaign | Three evening photographs | `CAMPAIGN_PIECES` at the top of `src/pages/home.mjs` |
 | Updates list | A name field that opens WhatsApp with a request to join the list | Wording in `src/pages/home.mjs`; backdrop `photos/satin.jpg` |
+
+### The Bestsellers row
+
+When a visitor scrolls down to Bestsellers the row starts moving: one piece
+along about every three and a half seconds, round and round. It stands still
+while the visitor is using it (pointing at it, touching it, or tabbing through
+it), waits six seconds after they move it themselves with a swipe or an arrow,
+and stops when they press the pause button beside the arrows, until they press
+it again. Visitors whose device is set to reduce motion get a row that never
+moves by itself. The arrows go round as well, so the row has no end.
+
+Six or more bestsellers go round on every screen size. With fewer, on some
+screens the row slides to its end and back to the start instead, and where
+every piece already fits across the screen it stays still and the arrows are
+hidden.
+
+| To change | Edit |
+| --- | --- |
+| Whether the row moves by itself | `BESTSELLERS_MOVE` at the top of `src/pages/home.mjs` (`false` leaves a row that is only swiped or stepped through) |
+| How long each piece rests, and how fast the row slides | The `RAIL_` numbers in the "Rails" part of `assets/js/site.js`, in milliseconds |
 
 ## Run it locally
 
@@ -82,7 +102,7 @@ The HTML files in this folder are generated. Edit the sources below, then run
 | Customer care wording | `src/pages/help.mjs` |
 | Header, footer, menus, bag drawer | `src/templates/layout.mjs` |
 | Colours, type and layout | `assets/css/styles.css` (the colours are the variables at the top) |
-| Bag, sorting and checkout behaviour | `assets/js/site.js` |
+| Bag, sorting, checkout and the moving Bestsellers row | `assets/js/site.js` |
 
 The build checks the content before writing anything: duplicate or malformed ids,
 missing prices or sizes, photos that do not exist, and every link on every page.
