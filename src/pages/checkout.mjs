@@ -24,7 +24,7 @@ export function checkoutPage({ site }) {
 
   <div class="checkout__state" data-checkout-empty hidden>
     <p class="checkout__lede">Your bag is empty.</p>
-    <a class="btn btn--gold" href="shop.html">Shop all pieces</a>
+    <a class="btn btn--primary" href="shop.html">Shop all pieces</a>
   </div>
 
   <div class="checkout__grid" data-checkout-main hidden>
@@ -59,7 +59,7 @@ export function checkoutPage({ site }) {
         ? ''
         : html`<p class="notice"><strong>Preview mode.</strong> No store WhatsApp number has been added yet, so WhatsApp will ask which chat to send the order to. Add the number in <code>src/data/site.mjs</code> to receive orders.</p>`}
 
-      <button class="btn btn--gold btn--block" type="submit">Place order on WhatsApp</button>
+      <button class="btn btn--primary btn--block" type="submit">Place order on WhatsApp</button>
       <p class="form__note">Your order opens in WhatsApp as a ready-to-send message. Send it, and we will reply to confirm your delivery.</p>
     </form>
 
@@ -79,7 +79,7 @@ export function checkoutPage({ site }) {
     <h2 class="section-title">Send your order in WhatsApp</h2>
     <p class="checkout__lede">Your order is written out and waiting in WhatsApp. Press send there to place it, and we will reply to confirm your delivery.</p>
     <div class="checkout__actions">
-      <a class="btn btn--gold" data-checkout-reopen target="_blank" rel="noopener">Open WhatsApp again</a>
+      <a class="btn btn--primary" data-checkout-reopen target="_blank" rel="noopener">Open WhatsApp again</a>
       <a class="btn btn--ghost" href="shop.html">Continue shopping</a>
     </div>
   </div>

@@ -1,4 +1,3 @@
-import { formatPrice } from '../lib/format.mjs';
 import { html } from '../lib/html.mjs';
 import { icon } from './icons.mjs';
 
@@ -46,29 +45,28 @@ function navLink(page, item) {
   return html`<a href="${item.href}"${page.id === item.id ? html` aria-current="page"` : ''}>${item.label}</a>`;
 }
 
+/**
+ * The header: the name on the left, the collections in the middle, customer
+ * care and the bag on the right. On the home page it lies over the hero
+ * photograph (see ".is-home .site-header" in styles.css).
+ */
 function header(page, { site, shopNav }) {
-  return html`<div class="announce">
-  <p>Complimentary delivery from ${formatPrice(site.delivery.freeOver)}</p>
-  <p class="announce__extra">Cash on delivery across Pakistan</p>
-</div>
-<header class="site-header">
+  const links = [...shopNav.filter((item) => item.inHeader), { id: 'about', href: 'about.html', label: 'Our Story' }];
+  return html`<header class="site-header">
   <div class="site-header__inner">
     <button class="icon-btn site-header__menu" type="button" data-open="menu" aria-label="Open menu">${icon('menu')}</button>
+    <a class="wordmark" href="index.html" aria-label="${site.name} home">${site.name}</a>
     <nav class="site-nav" aria-label="Main">
       <ul>
-        ${shopNav.filter((item) => item.inHeader).map((item) => html`<li>${navLink(page, item)}</li>`)}
+        ${links.map((item) => html`<li>${navLink(page, item)}</li>`)}
       </ul>
     </nav>
-    <a class="wordmark" href="index.html" aria-label="${site.name} home">${site.name}</a>
     <div class="site-header__actions">
-      <nav class="site-nav" aria-label="About">
-        <ul>
-          <li>${navLink(page, { id: 'about', href: 'about.html', label: 'Our Story' })}</li>
-        </ul>
-      </nav>
-      <button class="icon-btn bag-btn" type="button" data-open="bag" data-bag-button aria-label="Open bag">
-        ${icon('bag')}
-        <span class="bag-btn__count" data-bag-count hidden>0</span>
+      <a class="site-header__link" href="help.html"${page.id === 'help' ? html` aria-current="page"` : ''}>Customer care</a>
+      <button class="bag-btn" type="button" data-open="bag" data-bag-button data-count="0" aria-label="Open bag">
+        ${icon('bag', { size: 20 })}
+        <span class="bag-btn__text">Bag</span>
+        <span class="bag-btn__count" data-bag-count>0</span>
       </button>
     </div>
   </div>
@@ -97,46 +95,52 @@ export function contactList(site, className = 'contact-list') {
   </ul>`;
 }
 
-const CARE_LINKS = [
+/** Contact links as icons alone, for the footer. Only details that are set appear. */
+function contactIcons(site) {
+  const links = contactLinks(site);
+  if (links.length === 0) return '';
+  return html`<ul class="site-footer__contact">
+    ${links.map(
+      (link) => html`<li><a href="${link.href}" aria-label="${link.label}"${link.external ? html` target="_blank" rel="noopener"` : ''}>${icon(link.icon, { size: 20 })}</a></li>`,
+    )}
+  </ul>`;
+}
+
+const FOOTER_LINKS = [
+  { id: 'shop', href: 'shop.html', label: 'Shop' },
+  { id: 'about', href: 'about.html', label: 'Our Story' },
+  { id: 'help', href: 'help.html', label: 'Customer care' },
+  { href: 'help.html#size-guide', label: 'Size guide' },
+  { href: 'help.html#contact', label: 'Contact' },
+];
+
+const POLICY_LINKS = [
   { href: 'help.html#delivery', label: 'Delivery' },
   { href: 'help.html#payment', label: 'Payment' },
   { href: 'help.html#exchanges', label: 'Exchanges' },
-  { href: 'help.html#size-guide', label: 'Size guide' },
-  { href: 'help.html#contact', label: 'Contact us' },
+  { href: 'help.html#care', label: 'Garment care' },
 ];
 
-function footer(page, { site, shopNav, year }) {
-  const contact = contactList(site);
+function footer(page, { site, year }) {
   return html`<footer class="site-footer" id="footer">
-  <div class="container site-footer__grid">
-    <div class="site-footer__brand">
-      <a class="wordmark wordmark--lg" href="index.html" aria-label="${site.name} home">${site.name}</a>
-      <p>Pret, luxury pret and formals for women, in matte black, royal gold and burgundy.</p>
-    </div>
-    <nav aria-labelledby="footer-shop">
-      <h2 class="site-footer__heading" id="footer-shop">Shop</h2>
-      <ul>
-        ${shopNav.map((item) => html`<li>${navLink(page, item)}</li>`)}
-      </ul>
-    </nav>
-    <nav aria-labelledby="footer-care">
-      <h2 class="site-footer__heading" id="footer-care">Customer care</h2>
-      <ul>
-        ${CARE_LINKS.map((item) => html`<li><a href="${item.href}">${item.label}</a></li>`)}
-      </ul>
-    </nav>
-    <div>
-      <h2 class="site-footer__heading">About</h2>
-      <ul>
-        <li>${navLink(page, { id: 'about', href: 'about.html', label: 'Our Story' })}</li>
-      </ul>
-      ${contact}
-    </div>
-  </div>
   <div class="container">
+    <div class="site-footer__main">
+      <div class="site-footer__brand">
+        <a class="wordmark wordmark--lg" href="index.html" aria-label="${site.name} home">${site.name}</a>
+        <p>${site.tagline}</p>
+      </div>
+      <nav class="site-footer__nav" aria-label="Footer">
+        <ul>
+          ${FOOTER_LINKS.map((item) => html`<li>${navLink(page, item)}</li>`)}
+        </ul>
+      </nav>
+      ${contactIcons(site)}
+    </div>
     <div class="site-footer__base">
       <p>&copy; ${year} ${site.name}. All rights reserved.</p>
-      <p>Cash on delivery &middot; Delivery across Pakistan</p>
+      <ul>
+        ${POLICY_LINKS.map((item) => html`<li><a href="${item.href}">${item.label}</a></li>`)}
+      </ul>
     </div>
   </div>
 </footer>`;
@@ -189,7 +193,7 @@ function bagDialog({ site }) {
     <dl class="totals">
       <div><dt>Subtotal</dt><dd data-bag-subtotal></dd></div>
     </dl>
-    <a class="btn btn--gold btn--block" href="checkout.html">Checkout</a>
+    <a class="btn btn--primary btn--block" href="checkout.html">Checkout</a>
     <p class="drawer__note">Cash on delivery. Delivery in ${site.delivery.time}.</p>
   </div>
 </dialog>

@@ -8,6 +8,8 @@
  *
  *   photos/hero.jpg               landscape 16:9  → assets/img/hero-wide-*.webp
  *   photos/hero-mobile.jpg        portrait 4:5    → assets/img/hero-tall-*.webp
+ *   photos/story.jpg              landscape 3:2   → assets/img/story-*.webp
+ *   photos/satin.jpg              a wide strip    → assets/img/satin-*.webp
  *   photos/products/<name>.jpg    portrait 4:5    → assets/img/products/<name>-*.webp
  *
  * JPG, PNG, WebP, AVIF and TIFF originals all work. A photo in another shape
@@ -68,17 +70,20 @@ const baseName = (file) => file.replace(IMAGE_FILE, '');
 const topLevel = await listImages(photosDir);
 const productPhotos = await listImages(path.join(photosDir, 'products'));
 
-const heroes = [
+/** The photographs that are not products: original name, output name, shape. */
+const features = [
   { name: 'hero', out: 'hero-wide', preset: imageSizes.heroWide },
   { name: 'hero-mobile', out: 'hero-tall', preset: imageSizes.heroTall },
+  { name: 'story', out: 'story', preset: imageSizes.story },
+  { name: 'satin', out: 'satin', preset: imageSizes.satin },
 ];
 
 let prepared = 0;
 
-for (const hero of heroes) {
-  const file = topLevel.find((candidate) => baseName(candidate) === hero.name);
+for (const feature of features) {
+  const file = topLevel.find((candidate) => baseName(candidate) === feature.name);
   if (!file) continue;
-  await prepare(path.join(photosDir, file), path.join(outDir, hero.out), hero.preset);
+  await prepare(path.join(photosDir, file), path.join(outDir, feature.out), feature.preset);
   prepared += 1;
 }
 

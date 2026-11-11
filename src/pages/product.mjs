@@ -90,7 +90,7 @@ export function productPage(product, { site, categories, products, sizeChart }) 
 
       <form class="buy" data-buy="${product.id}">
       ${sizePicker(product)}
-        <button class="btn btn--gold btn--block" type="submit">Add to bag</button>
+        <button class="btn btn--primary btn--block" type="submit">Add to bag</button>
       </form>
 
       <ul class="assurances">
