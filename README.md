@@ -57,12 +57,18 @@ key only; database row-level security protects changes and customer order data.
 The admin can edit a product's price, compare-at price, stock and visibility,
 and review orders and update their fulfilment status.
 
-**Admin access is not active yet.** No administrator email has been added. Sign-in
-is by one-time email link, and the database grants no admin access until the
-owner supplies an email address and it is added to `admin_emails`. Checkout is
-not connected to the orders table yet, so the dashboard cannot receive customer
-orders. Products in this database are the sample catalogue; the stock values
-start at zero. Changes made here do not yet update the generated storefront.
+Customer sign-in is available at `account.html`, by one-time email link. New
+customers can save their name, phone and delivery details in a profile visible
+only to their own account. Order history remains a placeholder until checkout
+is connected to the database.
+
+**Admin access is not active yet.** No administrator email has been added.
+Admin sign-in is also by one-time email link, and the database grants no admin
+access until the owner supplies an email address and it is added to
+`admin_emails`. Checkout is not connected to the orders table yet, so the
+dashboard cannot receive customer orders. Products in this database are the
+sample catalogue; the stock values start at zero. Changes made here do not yet
+update the generated storefront.
 
 Before using this for live sales, the owner must provide the admin email, set up
 the correct sign-in redirect URL for the chosen website host, and connect live

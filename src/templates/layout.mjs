@@ -62,6 +62,7 @@ function header(page, { site, shopNav }) {
       </ul>
     </nav>
     <div class="site-header__actions">
+      <a class="site-header__link" href="account.html"${page.id === 'account' ? html` aria-current="page"` : ''}>Account</a>
       <a class="site-header__link" href="help.html"${page.id === 'help' ? html` aria-current="page"` : ''}>Customer care</a>
       <button class="bag-btn" type="button" data-open="bag" data-bag-button data-count="0" aria-label="Open bag">
         ${icon('bag', { size: 20 })}
@@ -119,6 +120,7 @@ const POLICY_LINKS = [
   { href: 'help.html#payment', label: 'Payment' },
   { href: 'help.html#exchanges', label: 'Exchanges' },
   { href: 'help.html#care', label: 'Garment care' },
+  { href: 'account.html', label: 'Your account' },
 ];
 
 function footer(page, { site, year }) {
@@ -150,6 +152,7 @@ function menuDialog(page, { site, shopNav }) {
   const secondary = [
     { id: 'about', href: 'about.html', label: 'Our Story' },
     { id: 'help', href: 'help.html', label: 'Customer care' },
+    { id: 'account', href: 'account.html', label: 'Your account' },
   ];
   return html`<dialog class="drawer drawer--start" id="menu" aria-label="Menu">
   <div class="drawer__head">

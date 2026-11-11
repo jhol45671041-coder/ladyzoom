@@ -3088,3 +3088,72 @@ dialog::backdrop {
     transition-delay: 0.3s;
   }
 }
+
+/* 20. Customer account
+   ========================================================================== */
+
+.account {
+  display: grid;
+  justify-items: center;
+  padding-bottom: var(--space-band);
+}
+
+.account__card {
+  width: min(100%, 38rem);
+  padding: clamp(1.5rem, 5vw, 3.5rem);
+  border: 1px solid var(--rule);
+  background: var(--black);
+}
+
+.account__card .section-title {
+  margin: 0;
+}
+
+.account__copy,
+.account__orders p {
+  color: var(--stone);
+  line-height: 1.7;
+}
+
+.account__copy span {
+  color: var(--ivory);
+}
+
+.account__form {
+  margin-top: 1.75rem;
+}
+
+.account__form .field__hint:empty {
+  display: none;
+}
+
+.account__profile-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.account__orders {
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+}
+
+.account__orders h3 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+@media (min-width: 1100px) and (max-width: 1249px) {
+  .site-header__actions a[href='account.html'] {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .account__profile-head {
+    flex-direction: column;
+  }
+}
