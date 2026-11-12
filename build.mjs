@@ -23,9 +23,11 @@ import { collections, shopNav } from './src/data/collections.mjs';
 import { imageSizes } from './src/data/image-sizes.mjs';
 import { site } from './src/data/site.mjs';
 import { aboutPage } from './src/pages/about.mjs';
+import { accountPage } from './src/pages/account.mjs';
 import { checkoutPage } from './src/pages/checkout.mjs';
 import { collectionPage } from './src/pages/collection.mjs';
 import { helpPage } from './src/pages/help.mjs';
+import { essentialsPages } from './src/pages/essentials.mjs';
 import { homePage } from './src/pages/home.mjs';
 import { notFoundPage } from './src/pages/not-found.mjs';
 import { productPage } from './src/pages/product.mjs';
@@ -283,6 +285,8 @@ async function build() {
     ...collections.map((collection) => collectionPage(collection, context)),
     ...products.map((product) => productPage(product, context)),
     aboutPage(context),
+    accountPage(context),
+    ...essentialsPages(context),
     helpPage(context),
     checkoutPage(context),
     notFoundPage(context),

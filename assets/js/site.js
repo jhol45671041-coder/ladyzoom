@@ -2,9 +2,10 @@
  * LadyZoom storefront behaviour.
  *
  * Every page is complete without this file. It adds the shopping bag, the
- * menu and bag drawers, sorting on listing pages, and the checkout handoff
- * to WhatsApp. The catalogue and settings it needs come from store-data.js
- * (window.LZ_STORE), which the build generates from src/data.
+ * menu and bag drawers, sorting on listing pages, the moving row of
+ * bestsellers, and the checkout handoff to WhatsApp. The catalogue and
+ * settings it needs come from store-data.js (window.LZ_STORE), which the build
+ * generates from src/data.
  */
 (() => {
   'use strict';
@@ -458,6 +459,60 @@
     ].join('\n');
   }
 
+  /** Save an order to the customer's private history when they checked out signed in. */
+  async function recordCustomerOrder(details) {
+    let session;
+    try {
+      session = JSON.parse(localStorage.getItem('ladyzoom:customer-session') || 'null');
+    } catch {
+      return false;
+    }
+    if (!session?.access_token || !session.user?.id) return false;
+
+    const save = () => {
+      const { subtotal, delivery, total } = totals();
+      return fetch('https://ztlguqjriqwgcaghvypa.supabase.co/rest/v1/orders', {
+        method: 'POST',
+        headers: {
+          apikey: 'sb_publishable_6Gf1MPLjojjxN62F2zBzOw_0X30c-eJ',
+          authorization: `Bearer ${session.access_token}`,
+          'content-type': 'application/json',
+          Prefer: 'return=minimal',
+        },
+        body: JSON.stringify({
+          user_id: session.user.id,
+          customer_name: details.name,
+          phone: details.phone,
+          address: details.address,
+          city: details.city,
+          notes: details.notes,
+          items: lines.map(({ id, size, quantity }) => ({ id, size, quantity })),
+          subtotal,
+          delivery,
+          total,
+          status: 'new',
+        }),
+      });
+    };
+
+    let response = await save();
+    if (response.status === 401 && session.refresh_token) {
+      const refreshed = await fetch('https://ztlguqjriqwgcaghvypa.supabase.co/auth/v1/token?grant_type=refresh_token', {
+        method: 'POST',
+        headers: { apikey: 'sb_publishable_6Gf1MPLjojjxN62F2zBzOw_0X30c-eJ', 'content-type': 'application/json' },
+        body: JSON.stringify({ refresh_token: session.refresh_token }),
+      });
+      if (refreshed.ok) {
+        const previousSession = session;
+        session = { ...await refreshed.json(), user: previousSession.user, avatar_path: previousSession.avatar_path };
+        localStorage.setItem('ladyzoom:customer-session', JSON.stringify(session));
+        response = await save();
+      }
+    }
+    if (!response.ok) throw new Error('The order was sent to WhatsApp, but could not be added to your account history.');
+    return true;
+  }
+
   const checkoutForm = $('[data-checkout-form]');
   if (checkoutForm) {
     const fields = checkoutForm.elements;
@@ -491,6 +546,7 @@
       }
 
       const orderLink = `https://wa.me/${store.whatsapp}?text=${encodeURIComponent(orderMessage(details))}`;
+      const orderSaved = recordCustomerOrder(details).catch((error) => error);
       window.open(orderLink, '_blank', 'noopener');
 
       rememberOrder(orderLink);
@@ -501,43 +557,340 @@
       done.focus({ preventScroll: true });
       done.scrollIntoView({ block: 'center' });
       announce('Your order is ready in WhatsApp. Press send there to place it.');
+      orderSaved.then((result) => {
+        const tracking = $('[data-order-tracking-status]', checkout);
+        if (result instanceof Error) {
+          tracking.textContent = result.message;
+        } else if (result) {
+          tracking.textContent = 'This order request is saved. Send it in WhatsApp to place the order.';
+        } else {
+          tracking.textContent = 'Sign in before checkout to keep this order in your account history.';
+        }
+      });
     });
   }
 
   /* ---------- Rails ---------------------------------------------------------
      A rail is a row of cards that scrolls sideways. It works by touch, wheel
-     and keyboard on its own; the arrow buttons are an extra for pointers, and
-     only appear when there is more than fits on screen. */
+     and keyboard on its own. This adds arrow buttons, which go round and round
+     rather than stopping at the ends, and moves a rail marked data-rail-auto
+     along by itself while it is on screen.
+
+     Going round is done by changing the order the cards are laid out in (CSS
+     `order`), never by moving them in the page, so the order they are read
+     and tabbed through stays as written. */
+
+  const RAIL_GLIDE = 900; // ms: one card sliding along by itself
+  const RAIL_GLIDE_QUICK = 500; // ms: the same, in answer to an arrow button
+  const RAIL_FIRST = 900; // ms: from the row coming on screen to its first move
+  const RAIL_REST = 2600; // ms: each card's rest between moves
+  const RAIL_HOLD = 6000; // ms: left alone after the visitor moves the row themselves
+  const RAIL_PHOTOS = 400; // ms: between looks at whether the row's photos have arrived
 
   for (const rail of $$('[data-rail]')) {
     const controls = $(`[data-rail-controls="${rail.id}"]`);
     if (!controls) continue;
     const previous = $('[data-rail-prev]', controls);
     const next = $('[data-rail-next]', controls);
+    const cards = Array.from(rail.children);
 
+    let head = 0; // which card is laid out first
+    let at = rail.scrollLeft; // where this script last put the row
+    let frame = 0; // the animation frame of a glide in progress
+    let goal = 0; // where that glide is heading
+    /** Puts off the row's next move by itself. Does nothing unless the rail moves by itself. */
+    let wait = () => {};
+
+    const overflow = () => rail.scrollWidth - rail.clientWidth;
+    /** The card laid out at a position: 0 is the first, -1 the last. */
+    const card = (position) => cards[(head + position + cards.length) % cards.length];
     /** One card plus the gap after it. */
-    const step = () => {
-      const [first, second] = rail.children;
-      if (!first) return rail.clientWidth;
-      return second ? second.offsetLeft - first.offsetLeft : first.offsetWidth;
+    const step = () => card(1).getBoundingClientRect().left - card(0).getBoundingClientRect().left;
+
+    const place = (left) => {
+      rail.scrollLeft = left;
+      at = rail.scrollLeft;
+    };
+
+    /** Stops a glide where it stands; the row then settles on the nearest card. */
+    const halt = () => {
+      if (!frame) return;
+      cancelAnimationFrame(frame);
+      frame = 0;
+      rail.classList.remove('is-gliding');
+    };
+
+    const glide = (to, duration) => {
+      const from = rail.scrollLeft;
+      goal = to;
+      const finish = () => {
+        frame = 0;
+        place(to);
+        rail.classList.remove('is-gliding');
+      };
+      if (reducedMotion.matches || Math.abs(to - from) < 1) {
+        finish();
+        return;
+      }
+      const began = performance.now();
+      const draw = (now) => {
+        const progress = Math.min(1, Math.max(0, (now - began) / duration));
+        if (progress === 1) {
+          finish();
+          return;
+        }
+        const eased = progress < 0.5 ? 4 * progress ** 3 : 1 - (-2 * progress + 2) ** 3 / 2;
+        place(from + (to - from) * eased);
+        frame = requestAnimationFrame(draw);
+      };
+      frame = requestAnimationFrame(draw);
+    };
+
+    /** Lays the cards out starting one card later (1) or earlier (-1), keeping what is in view where it is. */
+    const turn = (direction, by) => {
+      head = (head + direction + cards.length) % cards.length;
+      cards.forEach((element, index) => {
+        element.style.order = String((index - head + cards.length) % cards.length);
+      });
+      place(rail.scrollLeft - direction * by);
+    };
+
+    /** Moves the row one card along: 1 for onwards, -1 for back. */
+    const shift = (direction, duration) => {
+      const furthest = overflow();
+      if (cards.length < 2 || furthest <= 1) return;
+      if (frame) {
+        // A glide is under way: complete it first.
+        cancelAnimationFrame(frame);
+        frame = 0;
+        place(goal);
+      }
+      // While this script moves the row, it must not snap to a card of its own accord.
+      rail.classList.add('is-gliding');
+
+      const by = step();
+      if (!(by > 0)) {
+        rail.classList.remove('is-gliding');
+        return;
+      }
+      const box = rail.getBoundingClientRect();
+      /** The next place, in this direction, where a card lines up with the start of the row. */
+      const stop = (from) => (direction > 0 ? Math.ceil((from + 1) / by) : Math.floor((from - 1) / by)) * by;
+
+      const from = rail.scrollLeft;
+      let to = stop(from);
+      if (to > furthest + 1 || to < -1) {
+        // That is past the end of the row. If the card at the other end is out
+        // of sight, lay it out at this end and carry on in the same direction.
+        const spare = card(direction > 0 ? 0 : -1).getBoundingClientRect();
+        const outOfSight = direction > 0 ? spare.right <= box.left + 1 : spare.left >= box.right - 1;
+        if (outOfSight) {
+          turn(direction, by);
+          to = stop(rail.scrollLeft);
+        } else if (direction > 0) {
+          to = from < furthest - 1 ? furthest : 0;
+        } else {
+          to = from > 1 ? 0 : furthest;
+        }
+      }
+      to = Math.max(0, Math.min(furthest, to));
+      // Going all the way back takes a little longer than one card.
+      glide(to, Math.abs(to - rail.scrollLeft) > by * 1.5 ? duration * 1.5 : duration);
     };
 
     const sync = () => {
-      const furthest = rail.scrollWidth - rail.clientWidth;
-      controls.hidden = furthest <= 1;
-      previous.disabled = rail.scrollLeft <= 1;
-      next.disabled = rail.scrollLeft >= furthest - 1;
+      controls.hidden = cards.length < 2 || overflow() <= 1;
     };
 
-    const move = (direction) => {
-      rail.scrollBy({ left: direction * step(), behavior: reducedMotion.matches ? 'auto' : 'smooth' });
-    };
-
-    previous.addEventListener('click', () => move(-1));
-    next.addEventListener('click', () => move(1));
-    rail.addEventListener('scroll', sync, { passive: true });
+    previous.addEventListener('click', () => {
+      shift(-1, RAIL_GLIDE_QUICK);
+      wait(RAIL_HOLD);
+    });
+    next.addEventListener('click', () => {
+      shift(1, RAIL_GLIDE_QUICK);
+      wait(RAIL_HOLD);
+    });
+    rail.addEventListener(
+      'scroll',
+      () => {
+        // Movement this script did not make is the visitor's (a swipe, a
+        // trackpad, the Tab key): the row is theirs for a while.
+        if (Math.abs(rail.scrollLeft - at) <= 2) return;
+        at = rail.scrollLeft;
+        halt();
+        wait(RAIL_HOLD);
+      },
+      { passive: true },
+    );
     window.addEventListener('resize', sync);
     sync();
+
+    /* The Bestsellers row follows the visitor's vertical page scroll. Scrolling
+       down advances the row; scrolling up reverses it. */
+    if (!rail.hasAttribute('data-rail-scroll')) continue;
+    let lastPageY = window.scrollY;
+    let scrollRemainder = 0;
+    let wasInView = (() => {
+      const bounds = rail.getBoundingClientRect();
+      return bounds.bottom > 0 && bounds.top < window.innerHeight;
+    })();
+    window.addEventListener('scroll', () => {
+      const pageY = window.scrollY;
+      const delta = pageY - lastPageY;
+      lastPageY = pageY;
+      const bounds = rail.getBoundingClientRect();
+      const inView = bounds.bottom > 0 && bounds.top < window.innerHeight;
+      const canMove = wasInView && inView;
+      wasInView = inView;
+      if (!delta || !canMove || document.hidden) return;
+      const by = step();
+      if (!(by > 0) || cards.length < 2) return;
+      scrollRemainder += delta * 0.8;
+      rail.classList.add('is-gliding');
+      let target = rail.scrollLeft + scrollRemainder;
+      scrollRemainder = 0;
+      let guard = cards.length + 2;
+      while ((target > overflow() || target < 0) && guard-- > 0) {
+        if (target > overflow()) {
+          turn(1, by);
+          target -= by;
+        } else {
+          turn(-1, by);
+          target += by;
+        }
+      }
+      place(Math.max(0, Math.min(overflow(), target)));
+      rail.classList.remove('is-gliding');
+    }, { passive: true });
+    continue;
+
+    let onScreen = false;
+    let pointing = false; // the pointer has moved over the row and not yet left
+    let touching = false;
+    let stopped = false; // by the pause button
+    let arrivedAt = null; // where the pointer was when the row came under it
+    let timer = 0;
+
+    // A card must not slide into view empty. Its photo would otherwise be
+    // fetched only as it comes into sight, so every card's photo is asked for
+    // as the row comes near, and the row waits for them before it moves. (The
+    // second photo, shown on hover, is left to load when its card is in view.)
+    const photos = $$('.card__media img:not(.card__alt)', rail);
+    const fetchPhotos = () => {
+      for (const photo of photos) photo.loading = 'eager';
+    };
+    // A photo that failed to load counts as arrived: the row does not wait for it.
+    const photosHere = () => photos.every((photo) => photo.complete);
+
+    const keyboardInside = () => {
+      try {
+        return Boolean(rail.querySelector(':focus-visible'));
+      } catch {
+        return rail.contains(document.activeElement); // browsers without :focus-visible
+      }
+    };
+
+    const free = () =>
+      onScreen && !stopped && !pointing && !touching && !document.hidden && !reducedMotion.matches && !keyboardInside();
+
+    wait = (delay) => {
+      window.clearTimeout(timer);
+      timer = 0;
+      if (!free()) return;
+      timer = window.setTimeout(() => {
+        timer = 0;
+        if (!free()) return;
+        if (!photosHere()) {
+          fetchPhotos();
+          wait(RAIL_PHOTOS);
+          return;
+        }
+        shift(1, RAIL_GLIDE);
+        wait(RAIL_GLIDE + RAIL_REST);
+      }, delay);
+    };
+
+    const showToggle = () => {
+      toggle.hidden = reducedMotion.matches;
+      toggle.classList.toggle('is-paused', stopped);
+      toggle.setAttribute('aria-label', stopped ? 'Resume automatic scrolling' : 'Pause automatic scrolling');
+    };
+
+    toggle.addEventListener('click', () => {
+      stopped = !stopped;
+      showToggle();
+      wait(RAIL_FIRST);
+    });
+
+    // A resting pointer that the page was scrolled under does not hold the row
+    // still; one that is then moved, towards a card, does.
+    rail.addEventListener('pointerenter', (event) => {
+      if (event.pointerType !== 'touch') arrivedAt = { x: event.clientX, y: event.clientY };
+    });
+    rail.addEventListener('pointermove', (event) => {
+      if (pointing || event.pointerType === 'touch') return;
+      if (arrivedAt && Math.abs(event.clientX - arrivedAt.x) + Math.abs(event.clientY - arrivedAt.y) < 2) return;
+      pointing = true;
+      wait(RAIL_REST);
+    });
+    rail.addEventListener('pointerleave', (event) => {
+      if (event.pointerType === 'touch') return;
+      arrivedAt = null;
+      pointing = false;
+      wait(RAIL_REST);
+    });
+    rail.addEventListener('pointerdown', () => wait(RAIL_HOLD));
+
+    rail.addEventListener(
+      'touchstart',
+      () => {
+        touching = true;
+        halt();
+        wait(RAIL_HOLD);
+      },
+      { passive: true },
+    );
+    for (const type of ['touchend', 'touchcancel']) {
+      rail.addEventListener(
+        type,
+        (event) => {
+          touching = event.touches.length > 0;
+          wait(RAIL_HOLD);
+        },
+        { passive: true },
+      );
+    }
+
+    rail.addEventListener('focusin', () => wait(RAIL_REST));
+    rail.addEventListener('focusout', () => wait(RAIL_REST));
+    document.addEventListener('visibilitychange', () => wait(RAIL_REST));
+    if (reducedMotion.addEventListener) {
+      reducedMotion.addEventListener('change', () => {
+        showToggle();
+        wait(RAIL_FIRST);
+      });
+    }
+
+    new IntersectionObserver(
+      (entries) => {
+        onScreen = entries[entries.length - 1].intersectionRatio >= 0.5;
+        wait(RAIL_FIRST);
+      },
+      { threshold: 0.5 },
+    ).observe(rail);
+
+    // Within a screen's height of the row: time to fetch its photos.
+    const nearby = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        nearby.disconnect();
+        if (!reducedMotion.matches) fetchPhotos();
+      },
+      { rootMargin: '100% 0px' },
+    );
+    nearby.observe(rail);
+
+    showToggle();
   }
 
   /* ---------- Updates list --------------------------------------------------

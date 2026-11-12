@@ -1036,32 +1036,52 @@ a.wordmark:hover {
 
 .rail-controls {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
 }
 
-.rail-btn {
+.rail-btn,
+.rail-toggle {
   display: inline-grid;
   place-items: center;
   width: 2.5rem;
   height: 2.5rem;
-  border: 1px solid rgba(243, 236, 224, 0.6);
   border-radius: 50%;
+}
+
+.rail-btn {
+  border: 1px solid rgba(243, 236, 224, 0.6);
   transition:
     background-color 0.25s,
     border-color 0.25s,
-    color 0.25s,
-    opacity 0.25s;
+    color 0.25s;
 }
 
-.rail-btn:hover:not(:disabled) {
+.rail-btn:hover {
   border-color: var(--ivory);
   background: var(--ivory);
   color: var(--black);
 }
 
-.rail-btn:disabled {
-  opacity: 0.35;
-  cursor: default;
+/* Pauses a row that moves by itself, and sets it going again. Quieter than
+   the arrows beside it; it shows the pause mark while the row is moving and
+   the play mark once it has been stopped. */
+.rail-toggle {
+  color: var(--stone);
+  transition: color 0.25s;
+}
+
+.rail-toggle:hover {
+  color: var(--ivory);
+}
+
+.rail-toggle__play,
+.rail-toggle.is-paused .rail-toggle__pause {
+  display: none;
+}
+
+.rail-toggle.is-paused .rail-toggle__play {
+  display: block;
 }
 
 /* A single row that scrolls sideways and stops on a card. --rail-columns is
@@ -1078,6 +1098,7 @@ a.wordmark:hover {
   margin-inline: calc(var(--gutter) * -1);
   padding-inline: var(--gutter);
   overflow-x: auto;
+  overflow-anchor: none;
   overscroll-behavior-x: contain;
   scroll-padding-inline: var(--gutter);
   scroll-snap-type: x mandatory;
@@ -1086,6 +1107,13 @@ a.wordmark:hover {
 
 .rail::-webkit-scrollbar {
   display: none;
+}
+
+/* While the row follows page scrolling or an arrow glide, it must not also
+   pull towards the nearest card. */
+.rail.is-gliding,
+.rail[data-rail-scroll] {
+  scroll-snap-type: none;
 }
 
 .rail > * {
@@ -1121,6 +1149,8 @@ a.wordmark:hover {
   }
 }
 
+/* Stacked: the heading, then the line of text, then the link to everything on
+   the left with the row's buttons on the right. */
 @media (max-width: 799px) {
   .best__head {
     flex-direction: column;
@@ -1128,17 +1158,22 @@ a.wordmark:hover {
   }
 
   .best__aside {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr auto;
     width: 100%;
   }
 
   .best__text {
-    flex: 1 1 100%;
+    grid-column: 1 / -1;
     max-width: 24rem;
   }
 
+  .best__aside .text-link {
+    justify-self: start;
+  }
+
   .rail-controls {
-    margin-left: auto;
+    grid-column: 2;
   }
 }
 
@@ -1171,7 +1206,10 @@ a.wordmark:hover {
   }
 }
 
+/* Positioned, so that text hidden for screen readers only (the "Now" and
+   "Was" of a sale price) stays with its card inside a row that scrolls. */
 .card__link {
+  position: relative;
   display: block;
 }
 
@@ -3049,4 +3087,268 @@ dialog::backdrop {
   .edit__tiles > .is-revealed:nth-child(4) {
     transition-delay: 0.3s;
   }
+}
+
+/* 20. Customer account
+   ========================================================================== */
+
+.account {
+  display: grid;
+  justify-items: center;
+  padding-bottom: var(--space-band);
+}
+
+.account__card {
+  width: min(100%, 38rem);
+  padding: clamp(1.5rem, 5vw, 3.5rem);
+  border: 1px solid var(--rule);
+  background: var(--black);
+}
+
+.account__card .section-title {
+  margin: 0;
+}
+
+.account__copy,
+.account__orders p {
+  color: var(--stone);
+  line-height: 1.7;
+}
+
+.account__copy span {
+  color: var(--ivory);
+}
+
+.account__form {
+  margin-top: 1.75rem;
+}
+
+.account__form .field__hint:empty {
+  display: none;
+}
+
+.account__profile-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.account__orders {
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+}
+
+.account__orders h3 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+@media (min-width: 1100px) and (max-width: 1249px) {
+  .site-header__actions a[href='account.html'] {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .account__profile-head {
+    flex-direction: column;
+  }
+}
+
+.site-header__account {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.account__avatar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.account__avatar-button {
+  width: 5rem;
+  height: 5rem;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: #141311;
+  color: var(--stone);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.account__avatar-button:hover,
+.account__avatar-button:focus-visible {
+  border-color: var(--gold);
+  color: var(--ivory);
+}
+
+.account__avatar-button img,
+.account__avatar-placeholder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+}
+
+.account__avatar-button img[hidden] {
+  display: none;
+}
+
+.account__avatar-button [data-avatar-label] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.account__orders-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.account__orders-head p {
+  margin: 0;
+  color: var(--stone);
+  font-size: 0.75rem;
+}
+
+.account__orders-head strong {
+  color: var(--gold);
+  font-size: 1rem;
+}
+
+.account__order-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.account__order-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 0;
+  border-top: 1px solid var(--rule);
+  color: var(--stone);
+  font-size: 0.75rem;
+}
+
+.account__order-list strong {
+  color: var(--ivory);
+  font-weight: 500;
+}
+
+.account__avatar-placeholder[hidden] {
+  display: none;
+}
+
+@media (max-width: 1099px) {
+  .site-header__actions .site-header__account {
+    display: inline-flex;
+    padding: 0;
+  }
+
+  .site-header__account > span:not(.site-header__account-icon) {
+    display: none;
+  }
+
+  .site-header__actions {
+    gap: 0.625rem;
+  }
+}
+
+.site-header__account-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-grid;
+  place-items: center;
+  position: relative;
+  flex: 0 0 1.5rem;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.site-header__account-icon img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.site-header__account-icon img[hidden] {
+  display: none;
+}
+
+@media (max-width: 1099px) {
+  .site-header__inner {
+    gap: 0.5rem;
+  }
+}
+
+/* 21. Brand essentials
+   ========================================================================== */
+
+.policy {
+  padding-bottom: var(--space-band);
+}
+
+.policy__section {
+  display: grid;
+  gap: 1rem;
+  padding-block: clamp(1.5rem, 3vw, 2.25rem);
+  border-top: 1px solid var(--rule);
+}
+
+.policy__section:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.policy__section h2 {
+  margin: 0.5rem 0 0;
+  font-family: var(--serif);
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 400;
+}
+
+.policy__section h3 {
+  margin: 0.5rem 0 0;
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+.policy__notice {
+  padding: 1rem 1.25rem;
+  border-left: 2px solid var(--gold);
+  background: rgba(212, 175, 55, 0.07);
+  color: var(--stone);
+  font-size: 0.875rem;
+}
+
+.policy__updated {
+  margin-top: 1.5rem;
+  color: var(--stone);
+  font-size: 0.75rem;
 }

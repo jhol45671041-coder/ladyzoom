@@ -38,6 +38,7 @@ ${shareImage ? html`<meta property="og:image" content="${shareImage}">
 <link rel="stylesheet" href="assets/css/styles.css?v=${assetVersion}">
 <script src="assets/js/store-data.js?v=${assetVersion}" defer></script>
 <script src="assets/js/site.js?v=${assetVersion}" defer></script>
+<script type="module" src="assets/js/account-icon.js"></script>
 </head>`;
 }
 
@@ -62,6 +63,7 @@ function header(page, { site, shopNav }) {
       </ul>
     </nav>
     <div class="site-header__actions">
+      <a class="site-header__link site-header__account" href="account.html" aria-label="Your profile"${page.id === 'account' ? html` aria-current="page"` : ''}><span class="site-header__account-icon">${icon('user', { size: 17 })}<img data-header-avatar alt="" hidden></span><span>Account</span></a>
       <a class="site-header__link" href="help.html"${page.id === 'help' ? html` aria-current="page"` : ''}>Customer care</a>
       <button class="bag-btn" type="button" data-open="bag" data-bag-button data-count="0" aria-label="Open bag">
         ${icon('bag', { size: 20 })}
@@ -110,15 +112,17 @@ const FOOTER_LINKS = [
   { id: 'shop', href: 'shop.html', label: 'Shop' },
   { id: 'about', href: 'about.html', label: 'Our Story' },
   { id: 'help', href: 'help.html', label: 'Customer care' },
-  { href: 'help.html#size-guide', label: 'Size guide' },
-  { href: 'help.html#contact', label: 'Contact' },
+  { id: 'account', href: 'account.html', label: 'Your account' },
+  { id: 'contact', href: 'contact.html', label: 'Contact' },
+  { id: 'size-guide', href: 'size-guide.html', label: 'Size guide' },
+  { id: 'faqs', href: 'faqs.html', label: 'FAQs' },
 ];
 
 const POLICY_LINKS = [
-  { href: 'help.html#delivery', label: 'Delivery' },
-  { href: 'help.html#payment', label: 'Payment' },
-  { href: 'help.html#exchanges', label: 'Exchanges' },
-  { href: 'help.html#care', label: 'Garment care' },
+  { href: 'shipping.html', label: 'Shipping' },
+  { href: 'returns.html', label: 'Returns & exchanges' },
+  { href: 'privacy.html', label: 'Privacy' },
+  { href: 'terms.html', label: 'Terms' },
 ];
 
 function footer(page, { site, year }) {
@@ -150,6 +154,9 @@ function menuDialog(page, { site, shopNav }) {
   const secondary = [
     { id: 'about', href: 'about.html', label: 'Our Story' },
     { id: 'help', href: 'help.html', label: 'Customer care' },
+    { id: 'account', href: 'account.html', label: 'Your account' },
+    { id: 'contact', href: 'contact.html', label: 'Contact us' },
+    { id: 'faqs', href: 'faqs.html', label: 'FAQs' },
   ];
   return html`<dialog class="drawer drawer--start" id="menu" aria-label="Menu">
   <div class="drawer__head">

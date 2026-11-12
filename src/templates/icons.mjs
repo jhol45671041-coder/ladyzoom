@@ -5,6 +5,7 @@ import { raw } from '../lib/html.mjs';
  * Icons are decorative: the element around them carries the accessible name.
  */
 const SHAPES = {
+  user: '<circle cx="12" cy="8" r="3.25"/><path d="M5 20c.5-3.2 3.2-5.25 7-5.25s6.5 2.05 7 5.25"/>',
   bag: '<path d="M5.5 8.5h13l1 12h-15z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/>',
   menu: '<path d="M3.5 8h17M3.5 16h17"/>',
   close: '<path d="m5.5 5.5 13 13m0-13-13 13"/>',
@@ -13,6 +14,8 @@ const SHAPES = {
   chevron: '<path d="m6 9.5 6 6 6-6"/>',
   plus: '<path d="M12 5.5v13M5.5 12h13"/>',
   minus: '<path d="M5.5 12h13"/>',
+  pause: '<path d="M8.5 5v14m7-14v14"/>',
+  play: '<path d="M7.5 4.5v15L19.5 12z"/>',
   truck:
     '<path d="M2.5 6.5h11V16h-11z"/><path d="M13.5 9.5h4l3 3.5v3h-7"/><circle cx="7" cy="17.5" r="1.75"/><circle cx="17" cy="17.5" r="1.75"/>',
   cash: '<rect x="2.5" y="6.5" width="19" height="11" rx="1"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v4m12-4v4"/>',

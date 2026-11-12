@@ -12,6 +12,12 @@ import { icon } from '../templates/icons.mjs';
 
 /* The wording on this page is SAMPLE COPY. Rewrite it in the label's own words. */
 
+/**
+ * Whether the Bestsellers row moves along by itself while it is on screen.
+ * Set to false for a row that only moves when swiped or stepped through.
+ */
+const BESTSELLERS_SCROLL = true;
+
 /** The three pieces pictured in the campaign section, by product id. */
 const CAMPAIGN_PIECES = ['mehr', 'shehzadi', 'mahnoor'];
 
@@ -108,7 +114,7 @@ function bestsellers(pieces) {
         </div>
       </div>
     </div>
-    ${productRail(pieces, { id: 'bestsellers', label: 'Bestsellers' })}
+    ${productRail(pieces, { id: 'bestsellers', label: 'Bestsellers', scroll: BESTSELLERS_SCROLL })}
   </div>
 </section>`;
 }

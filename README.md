@@ -32,10 +32,52 @@ From top to bottom, with where each part comes from:
 | --- | --- | --- |
 | Hero | The campaign photograph under the header, the season line, a headline and the list of collections | Wording in `src/pages/home.mjs`; season in `src/data/site.mjs`; photo `photos/hero.jpg` |
 | The Festive Edit | One tile per collection, plus New In | Each collection's `image` in `src/data/catalog.mjs` |
-| Bestsellers | A row of pieces to scroll through | `bestseller: true` on a product in `src/data/catalog.mjs` |
+| Bestsellers | A row of pieces that moves horizontally as you scroll the page | `bestseller: true` on a product in `src/data/catalog.mjs`; the movement with `BESTSELLERS_MOVE` in `src/pages/home.mjs` |
 | Our philosophy | A black-and-white photograph beside a few words | Wording in `src/pages/home.mjs`; photo `photos/story.jpg` |
 | The campaign | Three evening photographs | `CAMPAIGN_PIECES` at the top of `src/pages/home.mjs` |
 | Updates list | A name field that opens WhatsApp with a request to join the list | Wording in `src/pages/home.mjs`; backdrop `photos/satin.jpg` |
+
+### The Bestsellers row
+
+Scroll down the page to move the row along; scroll up to move it back. The row
+moves only while the Bestsellers section is on screen. The arrows also move one
+piece at a time, and the row can be swiped or scrolled sideways as usual.
+
+| To change | Edit |
+| --- | --- |
+| Whether vertical page scrolling moves the row | `BESTSELLERS_SCROLL` at the top of `src/pages/home.mjs` |
+
+Run `npm run build` after changing it.
+
+## Store administration
+
+`admin.html` is the private administration workspace, backed by the separate
+Supabase project `ladyzoom-admin` in the Mumbai region. It uses a public browser
+key only; database row-level security protects changes and customer order data.
+The admin can edit a product's price, compare-at price, stock and visibility,
+and review orders and update their fulfilment status.
+
+Customer sign-in is available at `account.html`, by one-time email link. New
+customers can save their name, phone, delivery details and a private profile
+photo. When signed-in customers submit checkout through WhatsApp, an order
+record is saved to their account; guest checkout continues to work but is not
+tracked in account history. Customers can see their order count and recent
+statuses.
+
+**Admin access is not active yet.** No administrator email has been added.
+Admin sign-in is also by one-time email link, and the database grants no admin
+access until the owner supplies an email address and it is added to
+`admin_emails`. The admin may use an emailed sign-in link or set a password
+through the admin page’s account-setup flow. The dashboard can list signed-in
+customer order records, but
+there is no authorized admin email yet. Products in this database are the
+sample catalogue; the stock values start at zero. Changes made here do not yet
+update the generated storefront.
+
+Before using this for live sales, the owner must provide the admin email, set up
+the correct sign-in redirect URL for the chosen website host, and connect live
+product data to the storefront. Never put a Supabase secret or the database
+password in browser code or Git.
 
 ## Run it locally
 
@@ -82,7 +124,7 @@ The HTML files in this folder are generated. Edit the sources below, then run
 | Customer care wording | `src/pages/help.mjs` |
 | Header, footer, menus, bag drawer | `src/templates/layout.mjs` |
 | Colours, type and layout | `assets/css/styles.css` (the colours are the variables at the top) |
-| Bag, sorting and checkout behaviour | `assets/js/site.js` |
+| Bag, sorting, checkout and the scroll-linked Bestsellers row | `assets/js/site.js` |
 
 The build checks the content before writing anything: duplicate or malformed ids,
 missing prices or sizes, photos that do not exist, and every link on every page.
