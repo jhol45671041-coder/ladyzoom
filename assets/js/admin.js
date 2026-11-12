@@ -109,6 +109,21 @@ async function signOut() {
   loginPanel.hidden = false;
 }
 
+/**
+ * "Continue with Google" sends the browser to Supabase, which hands over to
+ * Google and brings the admin back here with a session in the address
+ * fragment (#access_token=…). The fragment handling at the bottom of this
+ * file stores that session, exactly as it does for email links. Access is
+ * still checked against the admin list in refresh() below.
+ */
+$('[data-google-signin]').addEventListener('click', () => {
+  const button = $('[data-google-signin]');
+  button.disabled = true;
+  loginStatus.textContent = 'Redirecting to Google…';
+  const redirectTo = encodeURIComponent(window.location.href.split('#')[0]);
+  window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${redirectTo}&prompt=select_account`;
+});
+
 $('[data-login-form]').addEventListener('submit', async (event) => {
   event.preventDefault();
   const button = $('button[type="submit"]', event.currentTarget);
@@ -247,12 +262,21 @@ ordersBody.addEventListener('click', async (event) => {
 
 $('[data-refresh-orders]').addEventListener('click', () => loadOrders().then(() => showNotice('Orders refreshed.')).catch((error) => showNotice(error.message, 'error')));
 
-// Supabase returns one-time-link tokens in the URL fragment. Store them, then
-// remove the fragment so the credentials are not left in browser history.
+// Supabase returns one-time-link and Google sign-in tokens in the URL
+// fragment. Store them, then remove the fragment so the credentials are not
+// left in browser history.
 const fragment = new URLSearchParams(window.location.hash.slice(1));
 const passwordRecovery = fragment.get('type') === 'recovery';
-if (fragment.get('access_token') && fragment.get('refresh_token')) {
-  saveSession({ access_token: fragment.get('access_token'), refresh_token: fragment.get('refresh_token'), expires_at: Number(fragment.get('expires_at')) });
+if (fragment.get('error')) {
+  const description = fragment.get('error_description') ?? fragment.get('error');
+  loginStatus.textContent = `Google sign-in did not complete: ${description.replace(/\+/g, ' ')} You can try again, or use your email below.`;
+  history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+} else if (fragment.get('access_token') && fragment.get('refresh_token')) {
+  // Email links carry expires_at; Google sign-in carries expires_in instead.
+  const expiresAt = fragment.get('expires_at')
+    ? Number(fragment.get('expires_at'))
+    : Math.floor(Date.now() / 1000) + Number(fragment.get('expires_in') || 3600);
+  saveSession({ access_token: fragment.get('access_token'), refresh_token: fragment.get('refresh_token'), expires_at: expiresAt });
   history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
 }
 if (passwordRecovery) {

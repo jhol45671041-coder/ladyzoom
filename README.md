@@ -57,19 +57,22 @@ key only; database row-level security protects changes and customer order data.
 The admin can edit a product's price, compare-at price, stock and visibility,
 and review orders and update their fulfilment status.
 
-Customer sign-in is available at `account.html`, by one-time email link. New
-customers can save their name, phone, delivery details and a private profile
-photo. When signed-in customers submit checkout through WhatsApp, an order
-record is saved to their account; guest checkout continues to work but is not
-tracked in account history. Customers can see their order count and recent
-statuses.
+Customer sign-in is available at `account.html`, by one-time email link or
+with **Continue with Google**. New customers can save their name, phone,
+delivery details and a private profile photo. Google sign-in starts the name
+from the Google profile and shows the Google picture until the customer adds
+their own photo. When signed-in customers submit checkout through WhatsApp, an
+order record is saved to their account; guest checkout continues to work but
+is not tracked in account history. Customers can see their order count and
+recent statuses.
 
 **Admin access is not active yet.** No administrator email has been added.
-Admin sign-in is also by one-time email link, and the database grants no admin
-access until the owner supplies an email address and it is added to
-`admin_emails`. The admin may use an emailed sign-in link or set a password
-through the admin page’s account-setup flow. The dashboard can list signed-in
-customer order records, but
+Admin sign-in is also by one-time email link, with Google and password
+options, and the database grants no admin access until the owner supplies an
+email address and it is added to `admin_emails`. The admin may use an emailed
+sign-in link, Continue with Google (only the approved admin email opens the
+dashboard), or set a password through the admin page’s account-setup flow.
+The dashboard can list signed-in customer order records, but
 there is no authorized admin email yet. Products in this database are the
 sample catalogue; the stock values start at zero. Changes made here do not yet
 update the generated storefront.
@@ -78,6 +81,29 @@ Before using this for live sales, the owner must provide the admin email, set up
 the correct sign-in redirect URL for the chosen website host, and connect live
 product data to the storefront. Never put a Supabase secret or the database
 password in browser code or Git.
+
+### Continue with Google — one-time setup in Supabase
+
+The Google button is already in the code (customer account page and admin
+page). It only works once the Google provider is enabled in the Supabase
+project — until then the button returns an error and email sign-in still
+works. To enable it:
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), create an
+   OAuth consent screen and a **Web application** OAuth client. Add the
+   authorised redirect URI
+   `https://ztlguqjriqwgcaghvypa.supabase.co/auth/v1/callback` and copy the
+   Client ID and Client Secret.
+2. In the Supabase dashboard for `ladyzoom-admin`, go to **Authentication →
+   Providers → Google**, enable it, and paste the Client ID and Secret.
+3. In Supabase **Authentication → URL Configuration**, set the Site URL to the
+   live site address and add these Redirect URLs (replace the host with the
+   real one, and add the `localhost` pair for local testing):
+   `https://<host>/account.html`, `https://<host>/admin.html`,
+   `http://localhost:3000/account.html`, `http://localhost:3000/admin.html`.
+
+No code change is needed after that: the button redirects to Supabase, which
+hands over to Google and brings the customer back to the same page signed in.
 
 ## Run it locally
 

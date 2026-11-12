@@ -5,8 +5,21 @@ const $ = (selector, root = document) => root.querySelector(selector);
 const loginPanel = $('[data-account-login]');
 const profilePanel = $('[data-account-profile]');
 const loginStatus = $('[data-account-status]');
+const googleStatus = $('[data-google-status]');
 const profileStatus = $('[data-profile-status]');
 const avatarStatus = $('[data-avatar-status]');
+
+/** The profile photo Google sent with the sign-in, if any. */
+function googleAvatarUrl() {
+  const metadata = session?.user?.user_metadata ?? {};
+  return metadata.avatar_url ?? metadata.picture ?? null;
+}
+
+/** The name Google sent with the sign-in, if any. */
+function googleName() {
+  const metadata = session?.user?.user_metadata ?? {};
+  return metadata.full_name ?? metadata.name ?? null;
+}
 let session = null;
 let avatarPath = null;
 let avatarObjectUrl = null;
@@ -61,8 +74,19 @@ async function showAvatar(path) {
   placeholder.hidden = false;
   if (headerImage) headerImage.hidden = true;
   if (!avatarPath) {
-    $('[data-avatar-label]').textContent = 'Add a profile photo';
-    $('[data-avatar-button]').setAttribute('aria-label', 'Add a profile photo');
+    // No uploaded photo: fall back to the Google profile picture, if there is one.
+    const googleAvatar = googleAvatarUrl();
+    if (googleAvatar) {
+      image.src = googleAvatar;
+      image.hidden = false;
+      placeholder.hidden = true;
+      if (headerImage) { headerImage.src = googleAvatar; headerImage.hidden = false; }
+      $('[data-avatar-label]').textContent = 'Change profile photo';
+      $('[data-avatar-button]').setAttribute('aria-label', 'Change profile photo');
+    } else {
+      $('[data-avatar-label]').textContent = 'Add a profile photo';
+      $('[data-avatar-button]').setAttribute('aria-label', 'Add a profile photo');
+    }
     return;
   }
   const objectPath = avatarPath.split('/').map(encodeURIComponent).join('/');
@@ -97,6 +121,12 @@ async function loadProfile() {
     session.avatar_path = profile.avatar_path ?? null;
     saveSession(session);
     await showAvatar(profile.avatar_path);
+  } else {
+    // First sign-in (often via Google): start the name from Google, and show
+    // the Google picture until the customer adds their own photo.
+    const name = googleName();
+    if (name) $('[name="full_name"]').value = name;
+    await showAvatar(null);
   }
   await loadOrders();
 }
@@ -113,6 +143,20 @@ async function signOut() {
   profilePanel.hidden = true;
   loginPanel.hidden = false;
 }
+
+/**
+ * "Continue with Google" sends the browser to Supabase, which hands over to
+ * Google and brings the customer back here with a session in the address
+ * fragment (#access_token=…). The fragment handling at the bottom of this
+ * file stores that session, exactly as it does for email links.
+ */
+$('[data-google-signin]').addEventListener('click', () => {
+  const button = $('[data-google-signin]');
+  button.disabled = true;
+  if (googleStatus) googleStatus.textContent = 'Redirecting to Google…';
+  const redirect = encodeURIComponent(window.location.href.split('#')[0]);
+  window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${redirect}&prompt=select_account`;
+});
 
 $('[data-account-login-form]').addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -187,8 +231,18 @@ $('[data-profile-form]').addEventListener('submit', async (event) => {
 });
 
 const fragment = new URLSearchParams(window.location.hash.slice(1));
-if (fragment.get('access_token') && fragment.get('refresh_token')) {
-  saveSession({ access_token: fragment.get('access_token'), refresh_token: fragment.get('refresh_token'), expires_at: Number(fragment.get('expires_at')) });
+if (fragment.get('error')) {
+  // Google (or Supabase) sent the customer back with a problem, for example
+  // the Google provider is not enabled yet, or sign-in was cancelled.
+  const description = fragment.get('error_description') ?? fragment.get('error');
+  if (googleStatus) googleStatus.textContent = `Google sign-in did not complete: ${description.replace(/\+/g, ' ')} You can try again, or use your email below.`;
+  history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+} else if (fragment.get('access_token') && fragment.get('refresh_token')) {
+  // Email links carry expires_at; Google sign-in carries expires_in instead.
+  const expiresAt = fragment.get('expires_at')
+    ? Number(fragment.get('expires_at'))
+    : Math.floor(Date.now() / 1000) + Number(fragment.get('expires_in') || 3600);
+  saveSession({ access_token: fragment.get('access_token'), refresh_token: fragment.get('refresh_token'), expires_at: expiresAt });
   history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
 }
 if (localStorage.getItem(STORE)) session = JSON.parse(localStorage.getItem(STORE));
