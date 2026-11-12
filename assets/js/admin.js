@@ -131,6 +131,82 @@ $('[data-login-form]').addEventListener('submit', async (event) => {
   }
 });
 
+const passwordResetPanel = $('[data-password-reset-panel]');
+const passwordForm = $('[data-password-form]');
+const emailValue = () => $('[name="email"]', $('[data-login-form]')).value.trim().toLowerCase();
+
+async function authRequest(path, body) {
+  const response = await fetch(`${SUPABASE_URL}/auth/v1/${path}`, {
+    method: 'POST', headers: { apikey: SUPABASE_PUBLISHABLE_KEY, 'content-type': 'application/json' }, body: JSON.stringify(body),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.msg ?? result.message ?? `Request failed (${response.status})`);
+  return result;
+}
+
+async function startPasswordSession() {
+  const result = await authRequest('token?grant_type=password', { email: emailValue(), password: $('[name="password"]', passwordForm).value });
+  saveSession({ ...result, user: result.user });
+  showSignedIn(result.user);
+  await refresh();
+}
+
+$('[data-password-login]').addEventListener('click', async () => {
+  if (!emailValue()) { loginStatus.textContent = 'Enter your approved admin email first.'; $('[name="email"]').focus(); return; }
+  const button = $('[data-password-login]');
+  button.disabled = true;
+  loginStatus.textContent = 'Signing in…';
+  try { await startPasswordSession(); }
+  catch (error) { loginStatus.textContent = `Could not sign in: ${error.message}`; }
+  finally { button.disabled = false; }
+});
+
+$('[data-create-account]').addEventListener('click', async () => {
+  if (!emailValue()) { loginStatus.textContent = 'Enter your approved admin email first.'; $('[name="email"]').focus(); return; }
+  const password = $('[name="password"]', passwordForm).value;
+  if (password.length < 10) { loginStatus.textContent = 'Choose a password with at least 10 characters.'; $('[name="password"]').focus(); return; }
+  const button = $('[data-create-account]');
+  button.disabled = true;
+  loginStatus.textContent = 'Creating your account…';
+  try {
+    await authRequest(`signup?redirect_to=${encodeURIComponent(window.location.href.split('#')[0])}`, { email: emailValue(), password });
+    loginStatus.textContent = 'If this is an eligible admin email, check your inbox to confirm the account, then sign in with your password.';
+  } catch (error) {
+    loginStatus.textContent = `${error.message} If this email already has an account, use “Forgot password?” to set a password.`;
+  } finally { button.disabled = false; }
+});
+
+$('[data-reset-password]').addEventListener('click', async () => {
+  if (!emailValue()) { loginStatus.textContent = 'Enter your admin email first.'; $('[name="email"]').focus(); return; }
+  const button = $('[data-reset-password]');
+  button.disabled = true;
+  try {
+    await authRequest(`recover?redirect_to=${encodeURIComponent(window.location.href.split('#')[0])}`, { email: emailValue() });
+    loginStatus.textContent = 'If that email has an account, a password-reset link is on its way.';
+  } catch (error) { loginStatus.textContent = `Could not send a reset link: ${error.message}`; }
+  finally { button.disabled = false; }
+});
+
+$('[data-password-reset-form]').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const password = new FormData(event.currentTarget).get('password');
+  if (password.length < 10) { loginStatus.textContent = 'Choose a password with at least 10 characters.'; return; }
+  const button = $('button[type="submit"]', event.currentTarget);
+  button.disabled = true;
+  try {
+    const response = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      method: 'PATCH', headers: { apikey: SUPABASE_PUBLISHABLE_KEY, authorization: `Bearer ${session?.access_token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ password }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.msg ?? result.message ?? 'Password update failed.');
+    await signOut();
+    passwordResetPanel.hidden = true;
+    loginStatus.textContent = 'Password saved. Sign in with your new password.';
+  } catch (error) { loginStatus.textContent = `Could not save the password: ${error.message}`; }
+  finally { button.disabled = false; }
+});
+
 $('[data-sign-out]').addEventListener('click', signOut);
 document.querySelectorAll('[data-tab]').forEach((tab) => tab.addEventListener('click', () => {
   document.querySelectorAll('[data-tab]').forEach((item) => item.classList.toggle('is-active', item === tab));
@@ -174,16 +250,22 @@ $('[data-refresh-orders]').addEventListener('click', () => loadOrders().then(() 
 // Supabase returns one-time-link tokens in the URL fragment. Store them, then
 // remove the fragment so the credentials are not left in browser history.
 const fragment = new URLSearchParams(window.location.hash.slice(1));
+const passwordRecovery = fragment.get('type') === 'recovery';
 if (fragment.get('access_token') && fragment.get('refresh_token')) {
   saveSession({ access_token: fragment.get('access_token'), refresh_token: fragment.get('refresh_token'), expires_at: Number(fragment.get('expires_at')) });
   history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
 }
-if (localStorage.getItem(SESSION_KEY)) session = JSON.parse(localStorage.getItem(SESSION_KEY));
-if (session?.expires_at && session.expires_at * 1000 < Date.now()) await refreshToken();
-if (session) {
-  const user = await getUser();
-  if (user) {
-    showSignedIn(user);
-    await refresh();
+if (passwordRecovery) {
+  loginPanel.hidden = true;
+  passwordResetPanel.hidden = false;
+} else {
+  if (localStorage.getItem(SESSION_KEY)) session = JSON.parse(localStorage.getItem(SESSION_KEY));
+  if (session?.expires_at && session.expires_at * 1000 < Date.now()) await refreshToken();
+  if (session) {
+    const user = await getUser();
+    if (user) {
+      showSignedIn(user);
+      await refresh();
+    }
   }
 }

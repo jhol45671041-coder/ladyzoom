@@ -67,7 +67,9 @@ statuses.
 **Admin access is not active yet.** No administrator email has been added.
 Admin sign-in is also by one-time email link, and the database grants no admin
 access until the owner supplies an email address and it is added to
-`admin_emails`. The dashboard can list signed-in customer order records, but
+`admin_emails`. The admin may use an emailed sign-in link or set a password
+through the admin page’s account-setup flow. The dashboard can list signed-in
+customer order records, but
 there is no authorized admin email yet. Products in this database are the
 sample catalogue; the stock values start at zero. Changes made here do not yet
 update the generated storefront.
