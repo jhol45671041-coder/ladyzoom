@@ -3352,3 +3352,37 @@ dialog::backdrop {
   color: var(--stone);
   font-size: 0.75rem;
 }
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.wordmark__mark {
+  display: block;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+  object-fit: cover;
+}
+
+.wordmark__name {
+  display: inline-block;
+}
+
+@media (max-width: 1099px) {
+  .wordmark {
+    gap: 0;
+    margin-right: 0;
+  }
+
+  .wordmark__mark {
+    width: 2.625rem;
+    height: 2.625rem;
+  }
+
+  .wordmark__name {
+    display: none;
+  }
+}

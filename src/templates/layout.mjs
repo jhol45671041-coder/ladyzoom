@@ -56,7 +56,7 @@ function header(page, { site, shopNav }) {
   return html`<header class="site-header">
   <div class="site-header__inner">
     <button class="icon-btn site-header__menu" type="button" data-open="menu" aria-label="Open menu">${icon('menu')}</button>
-    <a class="wordmark" href="index.html" aria-label="${site.name} home">${site.name}</a>
+    <a class="wordmark" href="index.html" aria-label="${site.name} home"><img class="wordmark__mark" src="assets/img/ladyzoom-logo.jpg" width="36" height="36" alt="" decoding="async"><span class="wordmark__name">${site.name}</span></a>
     <nav class="site-nav" aria-label="Main">
       <ul>
         ${links.map((item) => html`<li>${navLink(page, item)}</li>`)}
@@ -130,7 +130,7 @@ function footer(page, { site, year }) {
   <div class="container">
     <div class="site-footer__main">
       <div class="site-footer__brand">
-        <a class="wordmark wordmark--lg" href="index.html" aria-label="${site.name} home">${site.name}</a>
+        <a class="wordmark wordmark--lg" href="index.html" aria-label="${site.name} home"><img class="wordmark__mark" src="assets/img/ladyzoom-logo.jpg" width="48" height="48" alt="" decoding="async"><span class="wordmark__name">${site.name}</span></a>
         <p>${site.tagline}</p>
       </div>
       <nav class="site-footer__nav" aria-label="Footer">
@@ -160,7 +160,7 @@ function menuDialog(page, { site, shopNav }) {
   ];
   return html`<dialog class="drawer drawer--start" id="menu" aria-label="Menu">
   <div class="drawer__head">
-    <span class="wordmark">${site.name}</span>
+    <span class="wordmark wordmark--drawer"><img class="wordmark__mark" src="assets/img/ladyzoom-logo.jpg" width="32" height="32" alt="" decoding="async"><span class="wordmark__name">${site.name}</span></span>
     <button class="icon-btn" type="button" data-close aria-label="Close menu">${icon('close')}</button>
   </div>
   <nav class="drawer__body menu" aria-label="Main">
