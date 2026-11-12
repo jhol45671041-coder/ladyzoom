@@ -26,7 +26,7 @@
         <button class="button button--gold" type="submit">Send sign-in link <span aria-hidden="true">→</span></button>
       </form>
       <button class="button button--google" type="button" data-google-login><span aria-hidden="true" class="google-mark">G</span>Continue with Google</button>
-      <p class="google-note">Google sign-in requires a Google OAuth client configured in the Supabase project.</p>
+      <p class="google-note">Google sign-in works after Google OAuth is enabled in Supabase Auth → Providers and its client ID and secret are configured. If sign-in returns an error, check that provider setup and the allowed redirect URL.</p>
       <details class="password-login">
         <summary>Use a password instead</summary>
         <form data-password-form>

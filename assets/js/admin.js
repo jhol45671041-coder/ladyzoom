@@ -396,9 +396,24 @@ $('[data-export-orders]').addEventListener('click', () => {
 });
 
 $('[data-google-login]').addEventListener('click', () => {
-  const redirectTo = encodeURIComponent(window.location.href.split('#')[0]);
-  window.location.assign(`${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${redirectTo}`);
+  // GoTrue's browser redirect needs the public API key in the authorize URL;
+  // the user's browser navigation cannot attach the apikey request header.
+  const authorize = new URL(`${SUPABASE_URL}/auth/v1/authorize`);
+  authorize.searchParams.set('provider', 'google');
+  authorize.searchParams.set('redirect_to', `${window.location.origin}${window.location.pathname}${window.location.search}`);
+  authorize.searchParams.set('apikey', SUPABASE_PUBLISHABLE_KEY);
+  window.location.assign(authorize);
 });
+
+// Show OAuth failures returned by Supabase instead of silently returning to
+// the login form. This also makes provider/setup errors actionable.
+const authQuery = new URLSearchParams(window.location.search);
+const authError = authQuery.get('error_description') || authQuery.get('error');
+if (authError) {
+  const message = authError.replaceAll('+', ' ');
+  loginStatus.textContent = `Google sign-in could not complete: ${message}. Check that Google is enabled in Supabase Auth and that the site URL is allow-listed.`;
+  history.replaceState(null, '', `${window.location.pathname}${window.location.hash}`);
+}
 
 // Supabase returns one-time-link tokens in the URL fragment. Store them, then
 // remove the fragment so the credentials are not left in browser history.
