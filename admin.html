@@ -25,6 +25,8 @@
         <input id="admin-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
         <button class="button button--gold" type="submit">Send sign-in link <span aria-hidden="true">→</span></button>
       </form>
+      <button class="button button--google" type="button" data-google-login><span aria-hidden="true" class="google-mark">G</span>Continue with Google</button>
+      <p class="google-note">Google sign-in requires a Google OAuth client configured in the Supabase project.</p>
       <details class="password-login">
         <summary>Use a password instead</summary>
         <form data-password-form>
@@ -53,19 +55,54 @@
         <button class="button button--quiet" type="button" data-sign-out>Sign out</button>
       </div>
       <nav class="tabs" aria-label="Admin sections">
-        <button class="tab is-active" type="button" data-tab="products">Products <span data-product-count></span></button>
+        <button class="tab is-active" type="button" data-tab="overview">Overview</button>
+        <button class="tab" type="button" data-tab="products">Products <span data-product-count></span></button>
         <button class="tab" type="button" data-tab="orders">Orders <span data-order-count></span></button>
       </nav>
       <div class="notice" data-admin-notice role="status" aria-live="polite" hidden></div>
-      <section class="admin-section" data-section="products">
-        <div class="section-head"><div><h2>Products</h2><p>Manage prices, stock and visibility.</p></div></div>
-        <div class="table-wrap"><table class="product-table"><thead><tr><th>Piece</th><th>Collection</th><th>Price · Rs.</th><th>Compare at</th><th>Stock</th><th>Live</th><th></th></tr></thead><tbody data-products></tbody></table></div>
+      <section class="admin-section" data-section="overview">
+        <div class="section-head"><div><h2>Overview</h2><p>Snapshot of order requests and stock.</p></div><button class="button button--quiet" type="button" data-refresh>Refresh dashboard</button></div>
+        <div class="metric-grid">
+          <article class="metric-card"><span>Order requests</span><strong data-metric-orders>—</strong><small>All time</small></article>
+          <article class="metric-card"><span>Awaiting confirmation</span><strong data-metric-new>—</strong><small>Status: new</small></article>
+          <article class="metric-card"><span>Request value</span><strong data-metric-value>—</strong><small>Excludes cancelled requests</small></article>
+          <article class="metric-card"><span>Low stock</span><strong data-metric-low-stock>—</strong><small>Five or fewer</small></article>
+        </div>
+        <div class="overview-panels">
+          <section class="overview-panel"><div class="panel-heading"><h3>Recent requests</h3><button class="text-button" type="button" data-go-orders>View all</button></div><div class="recent-list" data-recent-orders></div><p class="empty-state" data-recent-empty hidden>No order requests yet.</p></section>
+          <section class="overview-panel"><div class="panel-heading"><h3>Restock watch</h3><button class="text-button" type="button" data-go-products>Manage products</button></div><div class="low-stock-list" data-low-stock-list></div><p class="empty-state" data-low-stock-empty hidden>Everything is above the low-stock threshold.</p></section>
+        </div>
+      </section>
+      <section class="admin-section" data-section="products" hidden>
+        <div class="section-head"><div><h2>Products</h2><p>Manage catalogue details, prices, sizes, stock and visibility.</p></div><button class="button button--gold" type="button" data-add-product>Add product <span aria-hidden="true">＋</span></button></div>
+        <p class="section-note">These edits are saved in the admin catalogue. They do not yet rebuild the static storefront.</p>
+        <div class="toolbar"><label class="search-field">Search products <input type="search" data-product-search placeholder="Name, ID or collection"></label></div>
+        <div class="table-wrap"><table class="product-table"><thead><tr><th>Piece</th><th>Collection</th><th>Price · Rs.</th><th>Stock</th><th>Visibility</th><th>Actions</th></tr></thead><tbody data-products></tbody></table></div>
+        <p class="empty-state" data-products-empty hidden>No products match your search.</p>
       </section>
       <section class="admin-section" data-section="orders" hidden>
-        <div class="section-head"><div><h2>Orders</h2><p>Customer orders and fulfilment status.</p></div><button class="button button--quiet" type="button" data-refresh-orders>Refresh</button></div>
+        <div class="section-head"><div><h2>Orders</h2><p>Search, filter, update statuses or export a CSV.</p></div><div class="button-row"><button class="button button--quiet" type="button" data-refresh-orders>Refresh</button><button class="button button--gold" type="button" data-export-orders>Export CSV ↓</button></div></div>
+        <div class="toolbar"><label class="search-field">Search orders <input type="search" data-order-search placeholder="Customer, phone, city or order ID"></label><label class="filter-field">Status <select data-order-filter><option value="all">All statuses</option><option value="new">New</option><option value="confirmed">Confirmed</option><option value="packed">Packed</option><option value="shipped">Shipped</option><option value="complete">Complete</option><option value="cancelled">Cancelled</option></select></label></div>
         <div class="table-wrap"><table class="orders-table"><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Placed</th><th>Status</th><th></th></tr></thead><tbody data-orders></tbody></table></div>
-        <p class="empty-state" data-orders-empty hidden>No orders yet. Orders appear here once customer checkout is connected.</p>
+        <p class="empty-state" data-orders-empty hidden>No orders match these filters.</p>
       </section>
+      <dialog class="product-dialog" data-product-dialog aria-labelledby="product-dialog-title">
+        <div class="dialog-heading"><div><p class="eyebrow">Catalogue</p><h2 id="product-dialog-title" data-dialog-title>Add product</h2></div><button class="button button--quiet" type="button" data-close-product>Close</button></div>
+        <form class="product-form" data-product-form>
+          <label>Product ID <input name="id" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" maxlength="60" placeholder="e.g. gul-e-noor"></label>
+          <label>Name <input name="name" required maxlength="100"></label>
+          <label>Collection <select name="category" required><option value="Pret">Pret</option><option value="Luxury Pret">Luxury Pret</option><option value="Formals">Formals</option></select></label>
+          <label>Product title <input name="title" required maxlength="140"></label>
+          <label class="field-wide">Description <textarea name="summary" rows="3" maxlength="1000" required></textarea></label>
+          <label>Price · Rs. <input name="price" type="number" min="1" step="1" required></label>
+          <label>Compare at · Rs. <input name="compare_at" type="number" min="0" step="1" placeholder="Optional"></label>
+          <label>Stock quantity <input name="stock" type="number" min="0" step="1" required></label>
+          <label>Sizes <input name="sizes" required placeholder="XS, S, M, L, XL"></label>
+          <label class="field-wide">Photo path or HTTPS URL <input name="image_url" placeholder="assets/img/products/example-1-480.webp"></label>
+          <label class="checkbox-field"><input name="active" type="checkbox" checked> Visible in catalogue</label>
+          <div class="form-actions"><button class="button button--gold" type="submit">Save product</button><button class="button button--danger" type="button" data-delete-product hidden>Delete product</button></div>
+        </form>
+      </dialog>
     </section>
   </main>
   <footer><span>LadyZoom Administration</span><span>Private · Secure · <a href="help.html">Customer care</a></span></footer>

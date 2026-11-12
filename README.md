@@ -54,8 +54,11 @@ Run `npm run build` after changing it.
 `admin.html` is the private administration workspace, backed by the separate
 Supabase project `ladyzoom-admin` in the Mumbai region. It uses a public browser
 key only; database row-level security protects changes and customer order data.
-The admin can edit a product's price, compare-at price, stock and visibility,
-and review orders and update their fulfilment status.
+The admin dashboard includes order-request totals, new requests, request value,
+and low-stock alerts; product search and add/edit/delete (including descriptions,
+sizes and photo paths); order search, status filters, fulfilment updates and CSV
+export. These product edits are stored in Supabase; they do not yet rebuild the
+static storefront, so publish synchronization is still required.
 
 Customer sign-in is available at `account.html`, by one-time email link. New
 customers can save their name, phone, delivery details and a private profile
@@ -64,20 +67,21 @@ record is saved to their account; guest checkout continues to work but is not
 tracked in account history. Customers can see their order count and recent
 statuses.
 
-**Admin access is not active yet.** No administrator email has been added.
-Admin sign-in is also by one-time email link, and the database grants no admin
-access until the owner supplies an email address and it is added to
-`admin_emails`. The admin may use an emailed sign-in link or set a password
-through the admin page’s account-setup flow. The dashboard can list signed-in
-customer order records, but
-there is no authorized admin email yet. Products in this database are the
-sample catalogue; the stock values start at zero. Changes made here do not yet
-update the generated storefront.
+Admin access is restricted by the Supabase `admin_emails` allowlist. Admins can
+use a one-time email link or a password; password creation and recovery are
+available in the admin page. Google sign-in is present in the UI but still needs
+a Google OAuth web client configured under Supabase Authentication → Providers.
+Use this callback URI in Google Cloud: `https://ztlguqjriqwgcaghvypa.supabase.co/auth/v1/callback`.
+Store the Google client ID and secret only in the Supabase dashboard, never in
+Git or chat. The redirect URL for the website host must also be allowed in
+Supabase Auth settings.
 
-Before using this for live sales, the owner must provide the admin email, set up
-the correct sign-in redirect URL for the chosen website host, and connect live
-product data to the storefront. Never put a Supabase secret or the database
-password in browser code or Git.
+The products currently seeded in Supabase are sample content and stock starts
+at zero. Admin edits are stored in the database but do not yet update the
+static storefront automatically. Signed-in customer checkout requests can be
+listed by admins; each remains unconfirmed until the store confirms it through
+WhatsApp. Never put a Supabase secret or the database password in browser code
+or Git.
 
 ## Run it locally
 

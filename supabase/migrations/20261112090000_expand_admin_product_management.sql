@@ -1,0 +1,16 @@
+-- Add the editable merchandising fields exposed by /admin.html.
+alter table public.products add column if not exists title text not null default '';
+alter table public.products add column if not exists summary text not null default '';
+alter table public.products add column if not exists image_url text not null default '';
+alter table public.products add column if not exists sizes text[] not null default array[]::text[];
+
+-- Seed the existing sample catalogue metadata. These rows remain sample content.
+update public.products set title='Burgundy Velvet Kurta Set', summary='Deep burgundy velvet traced with antique-gold tilla at the neckline, cuffs and hem, finished with a sheer organza dupatta. The look from this season’s campaign.', image_url='assets/img/products/mehr-1-480.webp', sizes=array['XS','S','M','L','XL']::text[] where id='mehr';
+update public.products set title='Ivory & Gold Peshwas', summary='A floor-length ivory organza peshwas with a fitted bodice and a full, sweeping skirt, embroidered throughout in gold.', image_url='assets/img/products/noor-jahan-1-480.webp', sizes=array['XS','S','M','L','XL']::text[] where id='noor-jahan';
+update public.products set title='Emerald Jacquard Kurta Set', summary='Emerald jacquard with a tone-on-tone paisley weave, a notched neckline and gold tassels at the cuffs.', image_url='assets/img/products/sehar-1-480.webp', sizes=array['XS','S','M','L','XL']::text[] where id='sehar';
+update public.products set title='Burgundy Zardozi Sharara Set', summary='A burgundy formal densely worked in antique gold, paired with an embroidered sharara and a scalloped net dupatta.', image_url='assets/img/products/shehzadi-1-480.webp', sizes=array['XS','S','M','L','XL']::text[] where id='shehzadi';
+update public.products set title='Ivory Chikankari Kurta Set', summary='A straight ivory kurta in soft cotton with tone-on-tone chikankari embroidery and covered buttons. The easiest piece in the wardrobe.', image_url='assets/img/products/zoya-1-480.webp', sizes=array['XS','S','M','L','XL']::text[] where id='zoya';
+update public.products set title='Black & Gold Gharara Set', summary='A black embroidered kurti over a full gharara edged in gold, with a net dupatta to match. Made for mehndis and late evenings.', image_url='assets/img/products/zarmina-1-480.webp', sizes=array['XS','S','M','L','XL']::text[] where id='zarmina';
+update public.products set title='Burgundy Silk Co-ord', summary='A relaxed band-collar shirt and wide-leg trousers in burgundy raw silk. Polished enough for dinner, easy enough for the whole day.', image_url='assets/img/products/mahnoor-1-480.webp', sizes=array['XS','S','M','L','XL']::text[] where id='mahnoor';
+update public.products set title='Antique Rose Raw Silk Set', summary='Antique-rose raw silk with gold gota work at the neckline, cuffs and hem, and a soft organza dupatta.', image_url='assets/img/products/gulnar-1-480.webp', sizes=array['XS','S','M','L','XL']::text[] where id='gulnar';
+update public.products set title='Black Gold-Print Kurta Set', summary='An A-line black kurta with a gold block-printed border at the hem and cuffs, and a printed neckline to match.', image_url='assets/img/products/anaya-1-480.webp', sizes=array['XS','S','M','L','XL']::text[] where id='anaya';

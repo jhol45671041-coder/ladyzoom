@@ -9,6 +9,9 @@ const notice = $('[data-admin-notice]');
 const productsBody = $('[data-products]');
 const ordersBody = $('[data-orders]');
 let session = null;
+let productRows = [];
+let orderRows = [];
+const LOW_STOCK = 5;
 
 const price = (value) => `Rs. ${Number(value).toLocaleString('en-PK')}`;
 const escape = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
@@ -56,28 +59,66 @@ async function rpc(name) {
   return rows;
 }
 
-async function loadProducts() {
-  const data = await api('products?select=*&order=category.asc,name.asc');
-  $('[data-product-count]').textContent = data.length;
-  productsBody.innerHTML = data.map((item) => `<tr data-id="${escape(item.id)}">
-    <td><span class="product-name">${escape(item.name)}</span><span class="product-id">${escape(item.id)}</span></td>
-    <td>${escape(item.category)}</td>
-    <td><input aria-label="${escape(item.name)} price" name="price" type="number" min="1" step="1" value="${item.price}"></td>
-    <td><input aria-label="${escape(item.name)} compare at price" name="compare_at" type="number" min="0" step="1" value="${item.compare_at ?? ''}" placeholder="—"></td>
-    <td><input aria-label="${escape(item.name)} stock" name="stock" type="number" min="0" step="1" value="${item.stock}"></td>
-    <td><select aria-label="${escape(item.name)} visibility" name="active"><option value="true"${item.active ? ' selected' : ''}>Live</option><option value="false"${!item.active ? ' selected' : ''}>Hidden</option></select></td>
-    <td><button class="save-row" type="button" data-save-product>Save</button></td>
+function renderProducts() {
+  const needle = $('[data-product-search]').value.trim().toLowerCase();
+  const visible = productRows.filter((item) => `${item.name} ${item.id} ${item.category} ${item.title}`.toLowerCase().includes(needle));
+  $('[data-products-empty]').hidden = visible.length > 0;
+  productsBody.innerHTML = visible.map((item) => `<tr data-id="${escape(item.id)}">
+    <td><span class="product-name">${escape(item.name)}</span><span class="product-id">${escape(item.title || item.id)} · ${escape(item.id)}</span></td>
+    <td>${escape(item.category)}</td><td>${price(item.price)}</td>
+    <td class="${item.stock <= LOW_STOCK ? 'stock-low' : ''}">${Number(item.stock)}${item.stock <= LOW_STOCK ? '<span class="product-id">Restock soon</span>' : ''}</td>
+    <td><span class="state-pill ${item.active ? 'is-live' : 'is-hidden'}">${item.active ? 'Live' : 'Hidden'}</span></td>
+    <td><div class="row-actions"><button class="save-row" type="button" data-edit-product>Edit</button><button class="save-row save-row--danger" type="button" data-remove-product>Delete</button></div></td>
   </tr>`).join('');
+  $('[data-product-count]').textContent = productRows.length;
 }
 
-async function loadOrders() {
-  const data = await api('orders?select=*&order=created_at.desc&limit=100');
-  $('[data-order-count]').textContent = data.length;
-  $('[data-orders-empty]').hidden = data.length > 0;
-  ordersBody.innerHTML = data.map((order) => {
+async function loadProducts() {
+  productRows = await api('products?select=*&order=category.asc,name.asc&limit=1000');
+  renderProducts();
+}
+
+function renderOrders() {
+  const needle = $('[data-order-search]').value.trim().toLowerCase();
+  const status = $('[data-order-filter]').value;
+  const visible = orderRows.filter((order) => {
+    const text = `${order.id} ${order.customer_name} ${order.phone} ${order.city} ${order.address}`.toLowerCase();
+    return (!needle || text.includes(needle)) && (status === 'all' || order.status === status);
+  });
+  $('[data-orders-empty]').hidden = visible.length > 0;
+  ordersBody.innerHTML = visible.map((order) => {
     const count = Array.isArray(order.items) ? order.items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0) : 0;
     return `<tr data-order-id="${escape(order.id)}"><td>#${escape(order.id.slice(0, 8))}</td><td>${escape(order.customer_name)}<span class="product-id">${escape(order.city)} · ${escape(order.phone)}</span></td><td>${count} item${count === 1 ? '' : 's'}</td><td>${price(order.total)}</td><td>${new Date(order.created_at).toLocaleDateString()}</td><td><select name="status" aria-label="Order status"><option${order.status === 'new' ? ' selected' : ''}>new</option><option${order.status === 'confirmed' ? ' selected' : ''}>confirmed</option><option${order.status === 'packed' ? ' selected' : ''}>packed</option><option${order.status === 'shipped' ? ' selected' : ''}>shipped</option><option${order.status === 'complete' ? ' selected' : ''}>complete</option><option${order.status === 'cancelled' ? ' selected' : ''}>cancelled</option></select></td><td><button class="save-row" type="button" data-save-order>Update</button></td></tr>`;
   }).join('');
+  $('[data-order-count]').textContent = orderRows.length;
+}
+
+async function loadOrders() {
+  orderRows = await api('orders?select=*&order=created_at.desc&limit=1000');
+  renderOrders();
+}
+
+function renderOverview() {
+  const open = orderRows.filter((order) => order.status === 'new').length;
+  const requestValue = orderRows.filter((order) => order.status !== 'cancelled').reduce((sum, order) => sum + Number(order.total || 0), 0);
+  const low = productRows.filter((item) => Number(item.stock) <= LOW_STOCK && item.active);
+  $('[data-metric-orders]').textContent = orderRows.length.toLocaleString();
+  $('[data-metric-new]').textContent = open.toLocaleString();
+  $('[data-metric-value]').textContent = price(requestValue);
+  $('[data-metric-low-stock]').textContent = low.length.toLocaleString();
+  $('[data-recent-empty]').hidden = orderRows.length > 0;
+  $('[data-recent-orders]').innerHTML = orderRows.slice(0, 5).map((order) => `<div class="recent-row"><span><strong>#${escape(order.id.slice(0, 8))} · ${escape(order.customer_name)}</strong><small>${new Date(order.created_at).toLocaleDateString()} · ${escape(order.status)}</small></span><strong>${price(order.total)}</strong></div>`).join('');
+  $('[data-low-stock-empty]').hidden = low.length > 0;
+  $('[data-low-stock-list]').innerHTML = low.slice(0, 8).map((item) => `<div class="stock-row"><span>${escape(item.name)}<small>${escape(item.category)}</small></span><strong>${Number(item.stock)} left</strong></div>`).join('');
+}
+
+async function refreshData() {
+  try {
+    await Promise.all([loadProducts(), loadOrders()]);
+    renderOverview();
+  } catch (error) {
+    showNotice(`Could not load the dashboard: ${error.message}`, 'error');
+  }
 }
 
 async function refresh() {
@@ -88,7 +129,7 @@ async function refresh() {
       loginStatus.textContent = 'This email is not on the LadyZoom administrator list. Ask the store owner to grant access.';
       return;
     }
-    await Promise.all([loadProducts(), loadOrders()]);
+    await refreshData();
   } catch (error) {
     showNotice(`Could not load the dashboard: ${error.message}`, 'error');
   }
@@ -211,41 +252,153 @@ $('[data-sign-out]').addEventListener('click', signOut);
 document.querySelectorAll('[data-tab]').forEach((tab) => tab.addEventListener('click', () => {
   document.querySelectorAll('[data-tab]').forEach((item) => item.classList.toggle('is-active', item === tab));
   document.querySelectorAll('[data-section]').forEach((section) => { section.hidden = section.dataset.section !== tab.dataset.tab; });
-  if (tab.dataset.tab === 'orders') loadOrders().catch((error) => showNotice(error.message, 'error'));
+  if (tab.dataset.tab === 'orders') renderOrders();
+  if (tab.dataset.tab === 'products') renderProducts();
+  if (tab.dataset.tab === 'overview') renderOverview();
 }));
 
+function switchTab(name) {
+  $(`[data-tab="${name}"]`).click();
+}
+
+$('[data-go-orders]').addEventListener('click', () => switchTab('orders'));
+$('[data-go-products]').addEventListener('click', () => switchTab('products'));
+$('[data-refresh]').addEventListener('click', () => refreshData());
+$('[data-refresh-orders]').addEventListener('click', () => refreshData());
+$('[data-product-search]').addEventListener('input', renderProducts);
+$('[data-order-search]').addEventListener('input', renderOrders);
+$('[data-order-filter]').addEventListener('change', renderOrders);
+
+const productDialog = $('[data-product-dialog]');
+const productForm = $('[data-product-form]');
+function openProduct(item = null) {
+  productForm.reset();
+  productForm.dataset.editId = item?.id ?? '';
+  $('[data-dialog-title]').textContent = item ? `Edit ${item.name}` : 'Add product';
+  productForm.elements.id.readOnly = Boolean(item);
+  productForm.elements.id.value = item?.id ?? '';
+  productForm.elements.name.value = item?.name ?? '';
+  productForm.elements.category.value = item?.category ?? 'Pret';
+  productForm.elements.title.value = item?.title ?? '';
+  productForm.elements.summary.value = item?.summary ?? '';
+  productForm.elements.price.value = item?.price ?? '';
+  productForm.elements.compare_at.value = item?.compare_at ?? '';
+  productForm.elements.stock.value = item?.stock ?? 0;
+  productForm.elements.sizes.value = (item?.sizes ?? ['XS', 'S', 'M', 'L', 'XL']).join(', ');
+  productForm.elements.image_url.value = item?.image_url ?? '';
+  productForm.elements.active.checked = item?.active ?? true;
+  $('[data-delete-product]').hidden = !item;
+  productDialog.showModal();
+}
+
+$('[data-add-product]').addEventListener('click', () => openProduct());
+$('[data-close-product]').addEventListener('click', () => productDialog.close());
+productDialog.addEventListener('click', (event) => { if (event.target === productDialog) productDialog.close(); });
+
 productsBody.addEventListener('click', async (event) => {
-  const button = event.target.closest('[data-save-product]');
-  if (!button) return;
-  const row = button.closest('tr');
-  const number = (name) => Number(row.querySelector(`[name="${name}"]`).value);
-  const compare = row.querySelector('[name="compare_at"]').value;
-  const patch = { price: number('price'), compare_at: compare === '' ? null : Number(compare), stock: number('stock'), active: row.querySelector('[name="active"]').value === 'true', updated_at: new Date().toISOString() };
-  if (!Number.isInteger(patch.price) || patch.price < 1 || (patch.compare_at !== null && (!Number.isInteger(patch.compare_at) || patch.compare_at <= patch.price)) || !Number.isInteger(patch.stock) || patch.stock < 0) {
-    showNotice('Check the price, compare-at price and stock values. Compare-at must be higher than the current price.', 'error');
-    return;
+  const row = event.target.closest('tr[data-id]');
+  if (!row) return;
+  const product = productRows.find((item) => item.id === row.dataset.id);
+  if (event.target.closest('[data-edit-product]')) openProduct(product);
+  if (event.target.closest('[data-remove-product]')) {
+    if (!window.confirm(`Delete ${product.name} from the admin catalogue? This cannot be undone.`)) return;
+    try {
+      await api(`products?id=eq.${encodeURIComponent(product.id)}`, { method: 'DELETE' });
+      showNotice(`${product.name} deleted from the admin catalogue.`);
+      await refreshData();
+    } catch (error) { showNotice(`Product could not be deleted: ${error.message}`, 'error'); }
   }
-  button.disabled = true;
+});
+
+productForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const values = Object.fromEntries(new FormData(productForm));
+  const editId = productForm.dataset.editId;
+  const id = values.id.trim().toLowerCase();
+  const priceValue = Number(values.price);
+  const compare = values.compare_at === '' ? null : Number(values.compare_at);
+  const stock = Number(values.stock);
+  const sizes = values.sizes.split(',').map((size) => size.trim()).filter(Boolean);
+  const imageUrl = values.image_url.trim();
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) { showNotice('Use a lowercase product ID with letters, numbers and hyphens.', 'error'); return; }
+  if (!Number.isInteger(priceValue) || priceValue < 1 || (compare !== null && (!Number.isInteger(compare) || compare <= priceValue)) || !Number.isInteger(stock) || stock < 0 || sizes.length === 0) {
+    showNotice('Check the price, higher compare-at price, non-negative stock and comma-separated sizes.', 'error'); return;
+  }
+  if (imageUrl && !imageUrl.startsWith('assets/') && !/^https:\/\//i.test(imageUrl)) {
+    showNotice('Photo paths must start with assets/ or use a secure HTTPS URL.', 'error'); return;
+  }
+  const product = { id, name: values.name.trim(), category: values.category, title: values.title.trim(), summary: values.summary.trim(), price: priceValue, compare_at: compare, stock, sizes, image_url: imageUrl, active: productForm.elements.active.checked, updated_at: new Date().toISOString() };
+  if (!product.name || !product.title || !product.summary) { showNotice('Name, title and description are required.', 'error'); return; }
+  const submit = $('button[type="submit"]', productForm);
+  submit.disabled = true;
   try {
-    await api(`products?id=eq.${encodeURIComponent(row.dataset.id)}`, { method: 'PATCH', body: patch, prefer: 'return=minimal' });
-    showNotice(`${row.querySelector('.product-name').textContent} saved.`);
+    if (editId) {
+      const { id: _id, ...patch } = product;
+      await api(`products?id=eq.${encodeURIComponent(editId)}`, { method: 'PATCH', body: patch, prefer: 'return=minimal' });
+    } else {
+      await api('products', { method: 'POST', body: product, prefer: 'return=minimal' });
+    }
+    productDialog.close();
+    showNotice(`${product.name} ${editId ? 'updated' : 'added'} in the admin catalogue.`);
+    await refreshData();
   } catch (error) { showNotice(`Product could not be saved: ${error.message}`, 'error'); }
-  finally { button.disabled = false; }
+  finally { submit.disabled = false; }
+});
+
+$('[data-delete-product]').addEventListener('click', async () => {
+  const id = productForm.dataset.editId;
+  const product = productRows.find((item) => item.id === id);
+  if (!id || !window.confirm(`Delete ${product?.name ?? id} from the admin catalogue? This cannot be undone.`)) return;
+  try {
+    await api(`products?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+    productDialog.close();
+    showNotice('Product deleted from the admin catalogue.');
+    await refreshData();
+  } catch (error) { showNotice(`Product could not be deleted: ${error.message}`, 'error'); }
 });
 
 ordersBody.addEventListener('click', async (event) => {
   const button = event.target.closest('[data-save-order]');
   if (!button) return;
   const row = button.closest('tr');
+  const status = row.querySelector('[name="status"]').value;
   button.disabled = true;
   try {
-    await api(`orders?id=eq.${encodeURIComponent(row.dataset.orderId)}`, { method: 'PATCH', body: { status: row.querySelector('[name="status"]').value }, prefer: 'return=minimal' });
+    await api(`orders?id=eq.${encodeURIComponent(row.dataset.orderId)}`, { method: 'PATCH', body: { status }, prefer: 'return=minimal' });
+    const order = orderRows.find((item) => item.id === row.dataset.orderId);
+    if (order) order.status = status;
     showNotice(`Order #${row.dataset.orderId.slice(0, 8)} updated.`);
+    renderOrders();
+    renderOverview();
   } catch (error) { showNotice(`Order could not be updated: ${error.message}`, 'error'); }
   finally { button.disabled = false; }
 });
 
-$('[data-refresh-orders]').addEventListener('click', () => loadOrders().then(() => showNotice('Orders refreshed.')).catch((error) => showNotice(error.message, 'error')));
+function csvCell(value) {
+  let text = String(value ?? '');
+  if (/^[\s]*[=+\-@]/.test(text)) text = `'${text}`;
+  return `"${text.replaceAll('"', '""')}"`;
+}
+$('[data-export-orders]').addEventListener('click', () => {
+  const filtered = orderRows.filter((order) => {
+    const needle = $('[data-order-search]').value.trim().toLowerCase();
+    const status = $('[data-order-filter]').value;
+    return (!needle || `${order.id} ${order.customer_name} ${order.phone} ${order.city} ${order.address}`.toLowerCase().includes(needle)) && (status === 'all' || order.status === status);
+  });
+  const columns = ['Order ID', 'Customer', 'Phone', 'Address', 'City', 'Items', 'Subtotal', 'Delivery', 'Total', 'Status', 'Created'];
+  const rows = filtered.map((order) => [order.id, order.customer_name, order.phone, order.address, order.city, (order.items ?? []).map((item) => `${item.id} ${item.size} x${item.quantity}`).join('; '), order.subtotal, order.delivery, order.total, order.status, order.created_at]);
+  const blob = new Blob([[columns, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `ladyzoom-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+});
+
+$('[data-google-login]').addEventListener('click', () => {
+  const redirectTo = encodeURIComponent(window.location.href.split('#')[0]);
+  window.location.assign(`${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${redirectTo}`);
+});
 
 // Supabase returns one-time-link tokens in the URL fragment. Store them, then
 // remove the fragment so the credentials are not left in browser history.
