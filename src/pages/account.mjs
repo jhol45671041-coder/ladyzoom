@@ -1,5 +1,5 @@
 import { html } from '../lib/html.mjs';
-import { icon } from '../templates/icons.mjs';
+import { googleIcon, icon } from '../templates/icons.mjs';
 
 export function accountPage({ site }) {
   const body = html`<section class="page-head page-head--compact container">
@@ -11,7 +11,12 @@ export function accountPage({ site }) {
 <section class="account container" data-account>
   <div class="account__card" data-account-login>
     <h2 class="section-title">Welcome back</h2>
-    <p class="account__copy">Enter your email and we’ll send you a secure, one-time sign-in link. New here? You can create an account the same way.</p>
+    <p class="account__copy">Continue with Google, or enter your email and we’ll send you a secure, one-time sign-in link. New here? You can create an account the same way.</p>
+    <div class="account__google">
+      <button class="btn btn--google btn--block" type="button" data-google-signin>${googleIcon()}<span>Continue with Google</span></button>
+      <p class="field__hint" data-google-status role="status" aria-live="polite"></p>
+    </div>
+    <div class="account__divider" aria-hidden="true"><span>or</span></div>
     <form class="form account__form" data-account-login-form>
       <div class="field"><label for="account-email">Email address</label><input id="account-email" name="email" type="email" autocomplete="email" required></div>
       <button class="btn btn--primary" type="submit">Email me a sign-in link</button>

@@ -3123,8 +3123,65 @@ dialog::backdrop {
   margin-top: 1.75rem;
 }
 
-.account__form .field__hint:empty {
+.account__form .field__hint:empty,
+.account__google .field__hint:empty {
   display: none;
+}
+
+/* "Continue with Google": Google's own white button, so the choice is
+   recognisable at a glance. The label stays in the site's capitals. */
+.btn--google {
+  border-color: #dadce0;
+  background: #fff;
+  color: #1f1f1f;
+  letter-spacing: 0.14em;
+}
+
+.btn--google:hover {
+  border-color: #c6c9cc;
+  background: #f8f9fa;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.btn--google:focus-visible {
+  border-color: var(--gold);
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.btn--google:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.btn--google svg {
+  flex: 0 0 auto;
+}
+
+.account__google {
+  margin-top: 1.75rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.account__divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  color: var(--stone);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.account__divider::before,
+.account__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
 }
 
 .account__profile-head {
